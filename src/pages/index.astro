@@ -1,0 +1,166 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base>
+
+<svg id="sky" aria-hidden="true"></svg>
+
+<div class="modebar" role="group" aria-label="View mode">
+  <button type="button" id="m-read" aria-pressed="true">Read</button>
+  <button type="button" id="m-explore" aria-pressed="false">Explore the map</button>
+</div>
+
+<div class="xui" id="xui" aria-hidden="true">
+  <div class="xbar">
+    <h2>How it all connects</h2>
+    <div class="groups">
+      <div class="group" id="expGroup"><span>ROLE</span></div>
+      <div class="group" id="typeGroup"><span>SHOW</span></div>
+    </div>
+  </div>
+  <aside class="panel" id="panel" aria-live="polite"></aside>
+  <span class="xhint">Scroll or pinch to zoom · drag to pan · click a dot</span>
+</div>
+
+<main class="page" id="page">
+  <div class="col">
+    <nav class="topnav" aria-label="Sections">
+      <a class="name" href="#top">Indigo Grady</a>
+      <a href="#ask">Ask</a><a href="#work">Work</a><a href="#people">Recommendations</a><a href="#experience">Experience</a><a href="#contact">Contact</a>
+    </nav>
+
+    <section class="hero" id="top" data-nodes="me rs ap cp">
+      <div class="hero-head">
+        <img class="photo" src="headshot.jpg" alt="Indigo Grady" width="120" height="120">
+        <div class="meta">
+          <p class="who">Indigo Grady (he/him) · Humacao, Puerto Rico · Remote · Atlantic Time (same as US Eastern for most of the year)</p>
+          <p class="open">Open to Product Manager, Program Manager, and Operations roles</p>
+        </div>
+      </div>
+      <h1>I build the systems that let a team <span>stop firefighting</span>.</h1>
+      <p class="lede">Product and operations leader. I was the second hire and, for three years, the entire product function at a remote SaaS and edtech company. Today I build Claude-based agentic workflows as Founding COO at AutoPilotPR.</p>
+      <div class="cta">
+        <a class="btn primary" href="https://www.linkedin.com/in/indigogrady">Connect on LinkedIn</a>
+        <button class="btn ghost" type="button" id="cta-explore">Explore the map</button>
+      </div>
+    </section>
+
+    <div class="ledger" aria-label="Results at Razor Sparrow" data-nodes="w-gt w-stab w-launch w-accounts">
+      <div><b>70,000</b><span>Chrome extension users, 4.8-star rating</span></div>
+      <div><b>&lt;24 hrs</b><span>first response time, down from weeks</span></div>
+      <div><b>3</b><span>new products launched</span></div>
+      <div><b>~300</b><span>school district accounts kept accurate</span></div>
+    </div>
+
+    <section id="ask" class="ask" data-nodes="">
+      <span class="eyebrow">Ask about my experience</span>
+      <h2>Ask anything. Get an instant answer.</h2>
+      <p class="sub">Answers come from the same map of my work you can explore above, with the evidence attached. No chatbot, so nothing is made up.</p>
+      <form class="askrow" id="askForm" autocomplete="off">
+        <label for="askInput" class="eyebrow" hidden>Your question</label>
+        <input id="askInput" type="text" placeholder="For example: Do you have leadership experience?" aria-label="Your question">
+        <button class="btn primary" type="submit">Ask</button>
+      </form>
+      <div class="suggest" id="suggest"></div>
+      <div class="answer" id="answer" hidden></div>
+    </section>
+
+    <section id="work">
+      <h2 class="eyebrow">Selected work</h2>
+      <div class="carousel" aria-roledescription="carousel" aria-label="Selected work">
+        <div class="cases" id="cases" tabindex="0">
+          <article class="case" data-nodes="w-stab w-tickets w-backlog w-gt">
+            <p class="where">Razor Sparrow · General Manager · 2023–2026</p>
+            <h3>Stabilizing a growing company</h3>
+            <dl>
+              <dt>Situation</dt><dd>I joined as the second hire. Support was buried and customers waited weeks for a first reply.</dd>
+              <dt>What I did</dt><dd>I traced much of the support volume to product defects, hired a senior engineer to fix them, and wrote the backlog that guided the work. I turned the founders' ideas into scoped, prioritized tickets with user stories and acceptance criteria, and rebuilt the support process around a new ticket system.</dd>
+              <dt>Result</dt><dd class="result">First response time fell from weeks to under 24 hours. With that foundation in place, I led the shift to growth and launched three new products.</dd>
+            </dl>
+            <figure class="shot">
+              <a href="https://chromewebstore.google.com/detail/gradetransferer-transfer/boapjdphamdkfjfdibbdpcemcdncfhjf"><img src="gradetransferer.jpg" alt="GradeTransferer on the Chrome Web Store: 4.8 stars from 211 ratings, 70,000 users" loading="lazy"></a>
+              <figcaption>GradeTransferer, Razor Sparrow's flagship extension. <a href="https://chromewebstore.google.com/detail/gradetransferer-transfer/boapjdphamdkfjfdibbdpcemcdncfhjf">See it on the Chrome Web Store</a></figcaption>
+            </figure>
+          </article>
+          <article class="case" data-nodes="w-accounts w-pricing w-portal">
+            <p class="where">Razor Sparrow · Product and systems design</p>
+            <h3>300 district accounts, kept accurate</h3>
+            <dl>
+              <dt>Situation</dt><dd>School district contacts changed constantly, so quotes and invoices got lost, and every renewal needed a fresh quote.</dd>
+              <dt>What I did</dt><dd>I built an account model that tied documents to the district instead of the person and routed each message to the right stakeholder. I redesigned district pricing, and co-designed a new admin portal with tiered permissions, including the authorization system and database schema behind it.</dd>
+              <dt>Result</dt><dd class="result">Quotes and invoices stayed attached for about 300 districts, and renewals no longer needed re-quoting.</dd>
+            </dl>
+            <figure class="shot">
+              <img src="portal.jpg" alt="Admin portal home screen with quick links, customer locations, and invoice statuses" loading="lazy">
+              <figcaption>An admin portal wireframe I built with AI (ChatGPT) to test the design before engineering started, shown here redrawn with sample data.</figcaption>
+            </figure>
+          </article>
+          <article class="case" data-nodes="w-ai w-flow s-ai">
+            <p class="where">Razor Sparrow and AutoPilotPR · AI workflows</p>
+            <h3>AI where it actually helps</h3>
+            <dl>
+              <dt>Situation</dt><dd>Routine support questions took up time the team needed for harder cases.</dd>
+              <dt>What I did</dt><dd>I built an AI support-drafting system in Cursor with Claude models and evaluated it against the replies the team had actually sent. I scoped it to routine inquiries on purpose and left escalations to people. I also prototype admin workflows with AI before handing them to engineering, so requirements arrive already tested.</dd>
+              <dt>Result</dt><dd class="result">It saved enough time that when the support role opened up, we didn't need to rehire for it. I now design Claude-based agentic workflows at AutoPilotPR, with a focus on keeping token costs low as usage grows.</dd>
+            </dl>
+            <figure class="shot">
+              <img src="autopilot-flow.jpg" alt="Draft reply to a guest email: the model writes the wording, while the villa capacity, open dates, and price are placed by code from the villa file, booking system, and live quote" loading="lazy">
+              <figcaption>Part of the AutoPilotPR reply flow. The model writes the words, and code places the facts from the source systems, so a draft can't invent a price or a date.</figcaption>
+            </figure>
+          </article>
+          <article class="case" data-nodes="w-connect w-build w-dc w-mente">
+            <p class="where">Code Power (an Optic Power company) · Product Coordinator · 2021–2023</p>
+            <h3>Client goals into buildable software</h3>
+            <dl>
+              <dt>Situation</dt><dd>A software consultancy running many client projects at once, each with shifting scope.</dd>
+              <dt>What I did</dt><dd>I oversaw eight projects across six industries and was the main liaison for seven clients. I ran up to three projects at a time in Jira, owned requirements and backlog grooming, and tested builds before release, filling the business analyst, scrum master, and project manager roles at times as each project needed.</dd>
+              <dt>Result</dt><dd class="result">One client's president wrote that his product "undeniably benefitted" from that involvement.</dd>
+            </dl>
+            <figure class="shot">
+              <a href="https://build.org/fambiz/outreachfambiz/"><img src="fambiz.jpg" alt="BUILD's Fam-Biz CEO simulation game for students in grades 7 to 12" loading="lazy"></a>
+              <figcaption>Client project: BUILD's <a href="https://build.org/fambiz/outreachfambiz/">Fam-Biz CEO simulation game</a> for students in grades 7 to 12.</figcaption>
+            </figure>
+          </article>
+        </div>
+        <div class="controls">
+          <div class="dots" id="dots"></div>
+          <div class="arrows">
+            <span class="count" id="count" aria-live="polite">1 / 4</span>
+            <button class="arrow" id="prev" type="button" aria-label="Previous case study">&larr;</button>
+            <button class="arrow" id="next" type="button" aria-label="Next case study">&rarr;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="people" data-nodes="p-lauren p-dev p-neil p-rob p-chad p-mari p-martin">
+      <h2 class="eyebrow">What colleagues say</h2>
+      <div class="quotes" id="quotes"></div>
+      <p class="fine">Full recommendations are on <a href="https://www.linkedin.com/in/indigogrady">LinkedIn</a>.</p>
+    </section>
+
+    <section id="experience" data-nodes="ap rs cp te bi">
+      <h2 class="eyebrow">Experience</h2>
+      <ul class="roles">
+        <li><span class="when">Oct 2026 – now</span><span class="what"><b>Founding COO (part-time), AutoPilotPR</b><span>Business strategy and Claude-based agentic workflows</span></span></li>
+        <li><span class="when">Aug 2023 – Sep 2026</span><span class="what"><b>General Manager, Razor Sparrow</b><span>Product, support, billing, renewals, and operations for a remote SaaS and edtech company</span><span class="prods"><button type="button" data-open="w-gt">GradeTransferer</button><button type="button" data-open="w-gs">GradeSight</button><button type="button" data-open="w-ems">Email My Students</button><button type="button" data-open="w-cc">ClassCloak</button><button type="button" data-open="w-gliders">GLIDERS</button></span></span></li>
+        <li><span class="when">May 2021 – Jun 2023</span><span class="what"><b>Product Coordinator, Code Power (an Optic Power company)</b><span>Requirements, backlogs, and delivery for eight client software projects</span></span></li>
+        <li><span class="when">Sep 2018 – Jul 2020</span><span class="what"><b>Environmental Specialist, Triumvirate Environmental</b><span>Oversaw migration of the FDA's chemical inventory to a new system; Rookie of the Year 2019</span></span></li>
+        <li><span class="when">Earlier</span><span class="what"><b>General Manager, Bistro 360</b><span>Hired and trained a team of 12 to 20 and managed more than 15 distributors</span></span></li>
+      </ul>
+      <p class="fine"><b>Tools:</b> Jira, Taiga, Confluence, Airtable, Stripe, GoHighLevel, REST APIs and webhooks, Claude, Claude Code, Cursor, MCP, HTML, JavaScript. <b>Education:</b> BS in Environmental Studies, Elon University.</p>
+    </section>
+
+    <section id="contact" class="contact" data-nodes="me">
+      <h3>Let's talk</h3>
+      <p>I'm looking for remote product, program, and operations roles where the work has a large impact on the team or company, especially where AI can help.</p>
+      <div class="row"><code id="email" data-u="indigogrady" data-d="gmail.com">email via LinkedIn</code><button class="copy" id="copy-email" type="button">Copy email</button></div>
+      <div class="row"><a class="btn primary" href="https://www.linkedin.com/in/indigogrady">Message me on LinkedIn</a></div>
+    </section>
+
+    <footer>Based in Humacao, Puerto Rico, a US territory. No visa or sponsorship needed.</footer>
+  </div>
+</main>
+
+<script src="../scripts/site.js"></script>
+</Base>
