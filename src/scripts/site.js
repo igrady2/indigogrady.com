@@ -1,84 +1,9 @@
 import * as d3 from 'd3';
 import { ANSWERS, SUGGEST } from '../data/answers.js';
+import { TYPES, N, L } from '../data/map.js';
 /* =========================================================
    DATA: one source of truth for the page, the map, and Ask
    ========================================================= */
-var TYPES = {
-  me:     { label: "Indigo", color: "#ffffff", r: 16 },
-  role:   { label: "Roles", one: "Role", color: "#8f95ff", r: 11 },
-  work:   { label: "Projects", one: "Project", color: "#5be0c4", r: 7 },
-  person: { label: "People", one: "Person", color: "#f5b96b", r: 7 },
-  skill:  { label: "Skills", one: "Skill", color: "#c79bff", r: 6 }
-};
-var N = [
-  { id: "me", type: "me", name: "Indigo Grady", sub: "Product and operations leader · Remote", body: "Start anywhere. Every role, project, recommendation and skill on this map links back to real work." },
-  { id: "ap", type: "role", exp: "ap", name: "AutoPilotPR", sub: "Founding COO (part-time) · Oct 2026 – now", body: "Business strategy and Claude-based agentic workflows, with a focus on keeping token costs low as usage grows." },
-  { id: "rs", type: "role", exp: "rs", name: "Razor Sparrow", sub: "General Manager · Aug 2023 – Sep 2026", body: "Second hire and, for three years, the entire product function at a remote SaaS and edtech company." },
-  { id: "cp", type: "role", exp: "cp", name: "Code Power", sub: "Product Coordinator · an Optic Power company · May 2021 – Jul 2023", body: "Code Power was the software delivery business of the Optic Power group. I joined early, when it had about ten developers, and oversaw eight client projects across six industries as the main liaison for seven clients." },
-  { id: "te", type: "role", exp: "early", name: "Triumvirate Environmental", sub: "Environmental Specialist · Sep 2018 – Jul 2020", body: "Rookie of the Year, 2019." },
-  { id: "bi", type: "role", exp: "early", name: "Bistro 360", sub: "General Manager · Arlington, VA · Feb 2017 – May 2018", body: "Ran a restaurant with a bar, dining room and retail market. Hired, trained and scheduled a front-of-house team of 12 to 20, managed more than 15 wine and beer distributors, and ordered for an inventory of 300+ wines, beers and liquors on a strict weekly budget." },
-  { id: "ch", type: "role", exp: "early", name: "Cheesetique", sub: "Assistant Front-of-House Manager · Arlington, VA · Jun 2016 – Feb 2017", body: "Promoted from server to bartender to assistant front-of-house manager within five months." },
-  { id: "w-flow", type: "work", exp: "ap", name: "Facts-locked reply flow", sub: "AutoPilotPR", body: "The model writes the words, and code places the facts from source systems, so a draft can't invent a price or a date." },
-  { id: "w-stab", type: "work", exp: "rs", name: "Stabilize, then grow", sub: "Razor Sparrow", body: "Traced much of the support volume to product defects, hired a senior engineer to fix them, and wrote the backlog that guided the work.", result: "First response time fell from weeks to under 24 hours." },
-  { id: "w-tickets", type: "work", exp: "rs", name: "Support ticket system", sub: "Razor Sparrow", body: "Routed work by need, prompted follow-up, and closed or reopened cases by clear rules, backed by SOPs and templates." },
-  { id: "w-backlog", type: "work", exp: "rs", name: "Backlog in Taiga", sub: "Razor Sparrow", body: "Turned the founders' ideas and a growing support backlog into scoped, prioritized tickets with user stories and acceptance criteria." },
-  { id: "w-portal", type: "work", exp: "rs", name: "Admin portal and permissions", sub: "Razor Sparrow", body: "Co-designed a new admin portal for customers and staff with tiered permissions, including the authorization system and database schema behind it. Prototyped with AI first." },
-  { id: "w-accounts", type: "work", exp: "rs", name: "District account model", sub: "Razor Sparrow", body: "Tied quotes and invoices to the district instead of the person, and routed each message to the right stakeholder.", result: "About 300 district accounts stayed accurate through constant turnover." },
-  { id: "w-pricing", type: "work", exp: "rs", name: "District pricing redesign", sub: "Razor Sparrow", result: "Renewals no longer needed a fresh quote every year." },
-  { id: "w-ai", type: "work", exp: "rs", name: "AI support drafting", sub: "Razor Sparrow", body: "Built in Cursor with Claude models, tested against replies the team had actually sent, and limited to routine questions on purpose.", result: "Saved enough time that the support role didn't need to be rehired." },
-  { id: "w-launch", type: "work", exp: "rs", name: "Three product launches", sub: "Razor Sparrow · 2026", body: "Led the shift from stabilization to growth with three new Chrome extensions for teachers: GradeSight, Email My Students and ClassCloak." },
-  { id: "w-gs", type: "work", exp: "rs", name: "GradeSight", sub: "Chrome extension · launched 2026", body: "Adds grade highlighting, class statistics and at-risk student flags to Google Classroom and Aspen gradebooks, with printable reports for parent conferences.", url: "https://chromewebstore.google.com/detail/gradesight/endcmfcbhcfhoenihpkblpmpfodckfpf", urlLabel: "See it on the Chrome Web Store" },
-  { id: "w-ems", type: "work", exp: "rs", name: "Email My Students", sub: "Chrome extension · launched 2026", body: "Lets teachers pick students in Google Classroom and open an Outlook email already addressed to them.", url: "https://chromewebstore.google.com/detail/email-my-students/dobolefimaffkkkohihlhdigcmjehoge", urlLabel: "See it on the Chrome Web Store" },
-  { id: "w-cc", type: "work", exp: "rs", name: "ClassCloak", sub: "Chrome extension · launched 2026", body: "Swaps student names and other sensitive details on screen for placeholders like \u201cStudent A,\u201d so teachers can share screenshots and recordings safely.", url: "https://chromewebstore.google.com/detail/classcloak-protect-studen/bicalpdiddceklkfbbfjpnipfhhjpgnh", urlLabel: "See it on the Chrome Web Store" },
-  { id: "w-gliders", type: "work", exp: "rs", name: "GLIDERS ambassador program", sub: "Razor Sparrow · launched 2026", body: "A free ambassador community for teachers who use Razor Sparrow's tools: early access to new features, a direct feedback line to leadership, and support to present at teacher conferences. I oversaw the launch, directing a consultant and a new hire.", url: "https://join.razorsparrow.com/gliders", urlLabel: "See GLIDERS" },
-  { id: "w-gt", type: "work", exp: "rs", name: "GradeTransferer", sub: "Flagship Chrome extension", body: "About 70,000 users and a 4.8-star rating on the Chrome Web Store.", url: "https://chromewebstore.google.com/detail/gradetransferer-transfer/boapjdphamdkfjfdibbdpcemcdncfhjf", urlLabel: "See it on the Chrome Web Store" },
-  { id: "w-connect", type: "work", exp: "cp", name: "Connect Marketing Task Manager", sub: "Code Power client project · 2022–2023", body: "A desktop app that builds a personal schedule from tasks and recurring rituals, pulling tasks in from the client's AirTable and syncing with Google and Outlook calendars. Built with Electron, React, TypeScript and MongoDB. I was the business analyst and product owner proxy: roadmap and backlog prioritization with the client, biweekly status and release reports, and QA across more than 20 releases. The client's president built it to save his own time first, then planned to pilot it at his workplace and use the results as the case for wider rollout.", result: "The client's president wrote that the product “undeniably benefitted.”" },
-  { id: "w-build", type: "work", exp: "cp", name: "BUILD Fam-Biz", sub: "Code Power client project · 2022–2023", body: "A game-based entrepreneurship course for students in grades 7 to 12, with grades sent back to the school's LMS. Built with Next.js, with AirTable as the content admin. I was the day-to-day client lead: requirements sessions, the Jira backlog, and running the game's calculations in AirTable to save developer time. I stayed BUILD's go-to advisor through their 2023 restructure.", url: "https://build.org/fambiz/outreachfambiz/", urlLabel: "See Fam-Biz on build.org" },
-  { id: "w-dc", type: "work", exp: "cp", name: "BUILD Design Challenge", sub: "Code Power client project · 2022", body: "A second BUILD learning app. I worked through more than 130 wireframes one by one with the client to pin down requirements, then relayed them to the developers.", url: "https://build.org/challenge/", urlLabel: "See the Design Challenge on build.org" },
-  { id: "w-mente", type: "work", exp: "cp", name: "Mente Serena", sub: "Code Power client project", body: "A platform connecting patients in Puerto Rico with licensed mental-health professionals, built for founders who are clinical psychologists. It launched publicly in 2024. As project coordinator, I stayed online past midnight with the developers at the end of the project and found the bug pattern that unblocked delivery of the admin panel." },
-  { id: "w-mundo", type: "work", exp: "cp", name: "MundoLMS", sub: "Code Power client project", body: "A custom learning platform for Mr. D Math, an accredited online math school, built from the ground up. I was the business analyst and client lead, gathering requirements with the founder from the start." },
-  { id: "w-walk", type: "work", exp: "cp", name: "Walkboard Partner Portal", sub: "Code Power client project", body: "An internal web app for Walkboard, a moving-services booking platform, to manage its partner companies. I was the business analyst and client lead, turning new business processes into user flows for the developer, including map-based pickup and drop-off and text and email notifications. Built with React, Firebase and Google Cloud functions, Google Maps, Twilio and SendGrid." },
-  { id: "w-friend", type: "work", exp: "cp", name: "Friendbase", sub: "Code Power client project", body: "A remake of Friendbase, a social virtual world where teens hang out as avatars. I was the business analyst and client lead." },
-  { id: "w-neuro", type: "work", exp: "cp", name: "NeuroID SDK", sub: "Code Power client project", body: "A mobile SDK for Android and iOS. I kept reporting flowing between the developers and the client." },
-  { id: "w-fda", type: "work", exp: "early", name: "FDA inventory migration", sub: "Triumvirate Environmental", body: "Oversaw migration of the FDA's complete chemical inventory into a new system and built a stop-gap process for the six months between contracts." },
-  { id: "w-hb", type: "work", exp: "early", name: "Employee handbook and training manual", sub: "Bistro 360", body: "Wrote the restaurant's new handbook and training manual from scratch, including sustainability practices that cut single-use items and food waste." },
-  { id: "w-liq", type: "work", exp: "early", name: "First liquor program", sub: "Cheesetique", body: "Planned and ran the store's first liquor program from concept to launch: the craft cocktail list, distributor ordering, and cost analysis and tracking." },
-  { id: "p-lauren", type: "person", exp: "rs", name: "Lauren Samaras", sub: "Customer Support and Success Specialist · reported to Indigo", quote: "Indigo is an exceptional leader who consistently balances the bigger picture with the operational details needed to bring ideas to life.", lead: true },
-  { id: "p-dev", type: "person", exp: "rs", name: "Lead Software Developer", sub: "Razor Sparrow · engineering partner", quote: "Indigo excelled at breaking down complex or loosely defined requests into clear user stories with acceptance criteria, effort estimates, and priority rankings." },
-  { id: "p-neil", type: "person", exp: "cp", name: "Neil Myers", sub: "President, Connect Marketing · client", quote: "He frequently provided insightful suggestions, either simplifying our specifications or prompting us to consider the broader, long-term implications of our requests." },
-  { id: "p-rob", type: "person", exp: "cp", name: "Roberto Del Valle", sub: "Senior Software Engineer · teammate at Code Power", quote: "Even when faced with technical aspects that may be unfamiliar, Indigo proactively seeks to understand them, providing valuable insights and facilitating effective communication between developers and the rest of the team." },
-  { id: "p-chad", type: "person", exp: "cp", name: "J Chad McCully", sub: "Engineering Manager, my manager on BUILD", quote: "Indigo Owns it." },
-  { id: "p-mari", type: "person", exp: "cp", name: "Marianela Ortiz", sub: "Direct manager and project manager at Code Power", quote: "One of Indigo's greatest strengths lies in his exceptional communication and collaboration skills with a strong rapport with the client.", page: false },
-  { id: "p-martin", type: "person", exp: "cp", name: "Martin Refi", sub: "Senior Product Designer · teammate at Code Power", quote: "A sharp mind and an innate ability to think outside the box, which allowed us to come up with innovative solutions to complex problems.", page: false },
-  { id: "s-req", type: "skill", name: "Requirements and backlogs", sub: "Skill" },
-  { id: "s-sys", type: "skill", name: "Process and systems design", sub: "Skill" },
-  { id: "s-ai", type: "skill", name: "AI workflows", sub: "Skill" },
-  { id: "s-cust", type: "skill", name: "Customer operations", sub: "Skill" },
-  { id: "s-stake", type: "skill", name: "Stakeholder alignment", sub: "Skill" },
-  { id: "s-lead", type: "skill", name: "Team leadership", sub: "Skill" },
-  { id: "t-jira", type: "skill", name: "Jira", sub: "Tool" },
-  { id: "t-conf", type: "skill", name: "Confluence", sub: "Tool" },
-  { id: "t-taiga", type: "skill", name: "Taiga", sub: "Tool" },
-  { id: "t-air", type: "skill", name: "Airtable", sub: "Tool" },
-  { id: "t-claude", type: "skill", name: "Claude and Claude Code", sub: "Tool" },
-  { id: "t-cursor", type: "skill", name: "Cursor", sub: "Tool" },
-  { id: "t-gpt", type: "skill", name: "ChatGPT", sub: "Tool" }
-];
-var L = [
-  ["me","ap"],["me","rs"],["me","cp"],["me","te"],["me","bi"],["me","ch"],["bi","w-hb"],["ch","w-liq"],["s-sys","w-hb"],["s-lead","w-hb"],
-  ["ap","w-flow"],
-  ["rs","w-stab"],["rs","w-tickets"],["rs","w-backlog"],["rs","w-portal"],["rs","w-accounts"],["rs","w-pricing"],["rs","w-ai"],["rs","w-launch"],["rs","w-gt"],["rs","w-gs"],["rs","w-ems"],["rs","w-cc"],["rs","w-gliders"],
-  ["w-stab","w-tickets"],["w-stab","w-backlog"],["t-jira","cp"],["t-jira","w-build"],["t-conf","cp"],["t-taiga","w-backlog"],["t-air","w-build"],["t-air","w-dc"],["t-air","w-connect"],["t-claude","w-ai"],["t-claude","w-flow"],["t-claude","ap"],["t-cursor","w-ai"],["t-gpt","w-portal"],["w-launch","w-gs"],["w-launch","w-ems"],["w-launch","w-cc"],["w-gliders","w-gt"],["s-cust","w-gliders"],["s-lead","w-gliders"],["s-req","w-gs"],["s-req","w-ems"],["s-req","w-cc"],["w-accounts","w-pricing"],
-  ["cp","w-connect"],["cp","w-build"],["cp","w-dc"],["cp","w-mente"],["cp","w-mundo"],["cp","w-walk"],["cp","w-friend"],["cp","w-neuro"],["w-build","w-dc"],["te","w-fda"],
-  ["rs","p-lauren"],["rs","p-dev"],["cp","p-neil"],["cp","p-chad"],["cp","p-mari"],["cp","p-rob"],["cp","p-martin"],
-  ["p-lauren","w-tickets"],["p-lauren","s-lead"],["p-lauren","s-cust"],["p-dev","w-backlog"],["p-dev","w-portal"],["p-neil","w-connect"],["p-rob","w-connect"],["p-martin","w-build"],["p-martin","w-connect"],["p-chad","w-build"],["p-chad","w-dc"],["p-mari","w-build"],
-  ["s-req","w-backlog"],["s-req","w-connect"],["s-req","w-dc"],["s-req","w-build"],["s-req","w-portal"],["s-req","w-stab"],
-  ["s-sys","w-tickets"],["s-sys","w-accounts"],["s-sys","w-portal"],["s-sys","w-fda"],["s-sys","w-flow"],["s-sys","w-mente"],
-  ["s-ai","w-ai"],["s-ai","w-flow"],["s-ai","w-portal"],
-  ["s-cust","w-tickets"],["s-cust","w-pricing"],["s-cust","w-accounts"],["s-cust","w-ai"],
-  ["s-stake","w-connect"],["s-stake","w-build"],["s-stake","w-mundo"],["s-stake","w-walk"],["s-stake","w-accounts"],["s-stake","p-mari"],["s-stake","p-rob"],
-  ["s-lead","bi"],["s-lead","w-stab"]
-];
 var byId = {}; N.forEach(function (n) { byId[n.id] = n; });
 var nbr = {}; N.forEach(function (n) { nbr[n.id] = new Set(); });
 L.forEach(function (l) { nbr[l[0]].add(l[1]); nbr[l[1]].add(l[0]); });
@@ -118,9 +43,9 @@ function fit(ids) {
   if (!xs.length) return;
   var pad = 70, minx = Math.min.apply(null, xs) - pad, maxx = Math.max.apply(null, xs) + pad, miny = Math.min.apply(null, ys) - pad / 2, maxy = Math.max.apply(null, ys) + pad;
   var a = fitArea(), k = Math.min((a.x1 - a.x0) / (maxx - minx), (a.y1 - a.y0) / (maxy - miny), 1.8);
-  k = Math.max(0.35, k);
+  k = Math.max(state.mode === 'read' ? 0.2 : 0.35, k);
   /* in the side panel the map is zoomed out to fit; keep dots and labels at their normal size */
-  sky.style.setProperty('--inv', state.mode === 'read' ? String(Math.min(sideMap() ? 2.4 : 1.25, Math.max(1, 1 / k))) : '1');
+  sky.style.setProperty('--inv', state.mode === 'read' ? String(Math.min(sideMap() ? 2.4 : 1.8, Math.max(1, 1 / k))) : '1');
   var tx = a.x0 + ((a.x1 - a.x0) - (maxx - minx) * k) / 2 - minx * k, ty = a.y0 + ((a.y1 - a.y0) - (maxy - miny) * k) / 2 - miny * k;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   d3.select(sky).transition().duration(reduce || state.mode === 'read' ? 0 : 650).call(zoomer.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
@@ -128,7 +53,7 @@ function fit(ids) {
 function visibleIds() { return N.filter(function (n) { return visible(n); }).map(function (n) { return n.id; }); }
 function focusIds(id) { return [id].concat(Array.from(nbr[id])); }
 
-function layout(W, H) {
+function layout(W, H, flat) {
   var nodes = N.map(function (n) { return { id: n.id, type: n.type }; });
   var links = L.map(function (l) { return { source: l[0], target: l[1] }; });
   var scale = Math.max(0.7, Math.min(1.6, Math.min(W, H) / 650));
@@ -137,7 +62,7 @@ function layout(W, H) {
       var a = l.source.type, b = l.target.type; return ((a === 'me' || b === 'me') ? 170 : (a === 'skill' || b === 'skill') ? 140 : 95) * scale; }).strength(0.45))
     .force('charge', d3.forceManyBody().strength(-620 * scale))
     .force('collide', d3.forceCollide().radius(function (d) { return (TYPES[d.type].r + 30) * scale; }))
-    .force('x', d3.forceX(W / 2).strength(0.035)).force('y', d3.forceY(H / 2).strength(0.05)).stop();
+    .force('x', d3.forceX(W / 2).strength(0.035)).force('y', d3.forceY(H / 2).strength(0.05 * (flat || 1))).stop();
   nodes.forEach(function (n, i) { var a = i * 2.4; n.x = W / 2 + Math.cos(a) * 40 * (i % 7); n.y = H / 2 + Math.sin(a) * 40 * (i % 7); });
   var me = nodes[0]; me.fx = W / 2; me.fy = H / 2;
   for (var i = 0; i < 400; i++) sim.tick();
@@ -150,7 +75,7 @@ function buildSky() {
   var W = window.innerWidth, H = window.innerHeight;
   sky.innerHTML = '';
   /* lay the network out for the space it lives in most of the time: the side panel, or a phone band */
-  var L2 = sideMap() ? layout(W * 0.44, H) : layout(W, Math.max(420, W * 0.95)); POS = L2.pos;
+  var L2 = sideMap() ? layout(W * 0.44, H) : layout(W, Math.max(420, W * 0.95), 3); POS = L2.pos;
   var svg = d3.select(sky);
   rootG = svg.append('g');
   var drift = rootG.append('g').attr('class', 'drift');
@@ -234,7 +159,7 @@ document.getElementById('cta-explore').addEventListener('click', function () { s
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.mode === 'explore') setMode('read'); });
 
 /* explore filters */
-var EXPS = [["all","All"],["ap","AutoPilotPR"],["rs","Razor Sparrow"],["cp","Code Power"],["early","Earlier"]];
+var EXPS = [["all","All"],["ap","AutoPilotPR"],["rs","Razor Sparrow"],["cp","Code Power"],["early","Earlier"],["own","Personal"]];
 var expGroup = document.getElementById('expGroup');
 EXPS.forEach(function (e) {
   var b = document.createElement('button'); b.type = 'button'; b.className = 'chip sel'; b.textContent = e[1];
@@ -243,7 +168,7 @@ EXPS.forEach(function (e) {
     state.exp = e[0]; state.focus = null;
     expGroup.querySelectorAll('.chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
     b.setAttribute('aria-pressed', 'true'); paint(); fit(visibleIds());
-    showPanel(e[0] === 'all' ? byId.me : byId[{ ap: 'ap', rs: 'rs', cp: 'cp', early: 'te' }[e[0]]]);
+    showPanel(e[0] === 'all' ? byId.me : byId[{ ap: 'ap', rs: 'rs', cp: 'cp', early: 'te', own: 'me' }[e[0]]]);
   });
   expGroup.appendChild(b);
 });
@@ -260,9 +185,9 @@ var panel = document.getElementById('panel');
 function chipBtn(o) { return '<button type="button" data-id="' + o.id + '"><i style="background:' + TYPES[o.type].color + '"></i>' + esc(o.name) + '</button>'; }
 function showPanel(n) {
   var t = TYPES[n.type], h = '';
-  h += '<span class="type" style="color:' + t.color + '">' + (n.type === 'me' ? 'START HERE' : (n.sub === 'Tool' ? 'TOOL' : (t.one || t.label).toUpperCase())) + '</span>';
+  h += '<span class="type" style="color:' + t.color + '">' + (n.type === 'me' ? 'START HERE' : (n.sub === 'Tool' || n.sub === 'Platform' ? n.sub.toUpperCase() : (t.one || t.label).toUpperCase())) + '</span>';
   h += '<h3>' + esc(n.name) + '</h3>';
-  if (n.sub) h += '<span class="sub">' + esc(n.sub) + '</span>';
+  if (n.sub && !/^(Tool|Platform|Skill)$/.test(n.sub)) h += '<span class="sub">' + esc(n.sub) + '</span>';
   if (n.quote) h += '<q>' + esc(n.quote) + '</q>';
   if (n.body) h += '<p>' + esc(n.body) + '</p>';
   if (n.result) h += '<p class="result">' + esc(n.result) + '</p>';
