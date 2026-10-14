@@ -123,8 +123,13 @@ function start() {
   var NCOUNT = {}; nodes.forEach(function (n) { NCOUNT[n.type] = (NCOUNT[n.type] || 0) + 1; });
   var PCOUNT = {}; P.forEach(function (p) { PCOUNT[p.type] = (PCOUNT[p.type] || 0) + 1; });
   var FONT = (getComputedStyle(root).getPropertyValue('--f-display') || '').trim() || 'system-ui, sans-serif';
-  function tail(path, p, q, T, M) {
-    var dx = (q.x - p.x) * T, dy = (q.y - p.y) * T, len = Math.sqrt(dx * dx + dy * dy);
+  /* streak length follows each particle's smoothed speed, not the time since the last frame,
+     so an uneven frame can't make every streak jump in length (that read as flicker) */
+  function tail(path, p, q, T, M, dt) {
+    var inv = 1 / Math.max(dt, 1 / 240);
+    p.vx = (p.vx || 0) + ((q.x - p.x) * inv - (p.vx || 0)) * 0.3;
+    p.vy = (p.vy || 0) + ((q.y - p.y) * inv - (p.vy || 0)) * 0.3;
+    var dx = p.vx * T / 60, dy = p.vy * T / 60, len = Math.sqrt(dx * dx + dy * dy);
     if (len < 0.01) return;
     if (len > M) { dx *= M / len; dy *= M / len; }
     path.moveTo(q.x - dx, q.y - dy); path.lineTo(q.x, q.y);
@@ -164,32 +169,33 @@ function start() {
 
     if (phase === 'swarm' || phase === 'glide' || phase === 'group') {
       swarmR = small ? Math.min(W * 0.29, H * 0.36) : Math.min(W, H) * 0.3;
-      var spin = 0, mix = 0, gT = 0, labelA = 0;
+      var spin = 0, mix = 0, gT = 0, labelA = 0, dotA = 0, settle = 0, gl = 0, next = null;
       if (phase === 'swarm') { swarmC.x = W / 2; swarmC.y = H * 0.38; }
       else if (phase === 'glide') {
         /* one smooth glide to center while the swarm spins up and takes on its colors */
         var u = Math.min(1, pt / GLIDE), eu = ease(u);
         swarmC.x = glideFrom.x + (W / 2 - glideFrom.x) * eu; swarmC.y = glideFrom.y + (H * 0.45 - glideFrom.y) * eu;
         swarmR *= 1 + 0.12 * Math.sin(u * Math.PI);
-        spin = Math.sin(u * Math.PI) * 1.6; mix = eu;
-        if (u >= 1) { phase = 'group'; phaseStart = now; startGroup(); }
+        spin = Math.sin(u * Math.PI) * 1.6; mix = eu; gl = eu; dotA = 0.9 * eu * eu;
+        if (u >= 1) next = 'group';
       } else {
         /* sort by type: each color gathers into its own labeled cluster */
-        mix = 1; gT = Math.min(1, pt / GROUP_MOVE);
+        mix = 1; gT = Math.min(1, pt / GROUP_MOVE); dotA = 0.9; settle = clamp(pt / 0.6, 0, 1);
         labelA = clamp((pt - GROUP_MOVE * 0.55) / 0.5, 0, 1);
-        if (pt >= GROUP_MOVE + GROUP_HOLD) { phase = 'form'; phaseStart = now; startForm(); }
+        if (pt >= GROUP_MOVE + GROUP_HOLD) next = 'form';
       }
       ctx.globalCompositeOperation = 'source-over';
       ctx.clearRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'lighter';
       ctx.lineWidth = 1;
-      var TAIL = phase === 'swarm' ? 7 : phase === 'glide' ? 5 : 2, MAXT = phase === 'swarm' ? 34 : phase === 'glide' ? 40 : 18;
+      /* tails ease shorter as the groups settle, so nothing pops between steps */
+      var TAIL = phase === 'swarm' ? 7 : phase === 'glide' ? 7 - 2 * gl : 5 - 3 * settle, MAXT = phase === 'swarm' ? 34 : phase === 'glide' ? 34 + 6 * gl : 40 - 22 * settle;
       if (phase === 'swarm') {
         var paths = [new Path2D(), new Path2D(), new Path2D()];
         P.forEach(function (p, i) {
           flow(p, dt, time, 0);
           var q = swarmXY(p, 0, null);
-          if (p.x || p.y) tail(paths[i % 3], p, q, TAIL, MAXT);
+          if (p.x || p.y) tail(paths[i % 3], p, q, TAIL, MAXT, dt);
           p.x = q.x; p.y = q.y;
         });
         ctx.strokeStyle = 'rgba(235,242,255,0.55)'; ctx.stroke(paths[0]);
@@ -202,22 +208,27 @@ function start() {
           var q;
           if (phase === 'glide') { flow(p, dt, time, spin); q = swarmXY(p, 0, null); }
           else {
-            var g = groups[p.type], e = ease(clamp((gT - p.d * 0.2) / 0.8, 0, 1));
+            /* keep the swarm turning underneath, so each dot leaves it moving instead of from a standstill */
+            var g = groups[p.type], e = ease(clamp((gT - p.d * 0.2) / 0.8, 0, 1)), b0;
+            if (e < 1) { flow(p, dt, time, 0); b0 = swarmXY(p, 0, null); } else b0 = p;
             var a = p.ga + time * 0.18, tx = g.x + Math.cos(a) * p.gr * g.r, ty = g.y + Math.sin(a) * p.gr * g.r;
-            q = { x: p.sx + (tx - p.sx) * e, y: p.sy + (ty - p.sy) * e };
+            q = { x: b0.x + (tx - b0.x) * e, y: b0.y + (ty - b0.y) * e };
           }
-          tail(tp[p.type], p, q, TAIL, MAXT);
-          if (phase === 'group') dots[p.type].rect(q.x - p.s / 2, q.y - p.s / 2, p.s, p.s);
+          tail(tp[p.type], p, q, TAIL, MAXT, dt);
+          if (dotA > 0) dots[p.type].rect(q.x - p.s / 2, q.y - p.s / 2, p.s, p.s);
           p.x = q.x; p.y = q.y;
         });
         TYPES.forEach(function (t) {
           var c = COLORS[t], w = [235, 242, 255], m = t === 'me' ? 0 : mix;
           var col = Math.round(w[0] + (c[0] - w[0]) * m) + ',' + Math.round(w[1] + (c[1] - w[1]) * m) + ',' + Math.round(w[2] + (c[2] - w[2]) * m);
-          ctx.strokeStyle = 'rgba(' + col + ',' + (phase === 'group' ? 0.35 : 0.55) + ')'; ctx.stroke(tp[t]);
-          ctx.fillStyle = 'rgba(' + col + ',0.9)'; ctx.fill(dots[t]);
+          ctx.strokeStyle = 'rgba(' + col + ',' + (phase === 'glide' ? 0.48 + 0.07 * gl : 0.55 - 0.2 * settle) + ')'; ctx.stroke(tp[t]);
+          if (dotA > 0) { ctx.fillStyle = 'rgba(' + col + ',' + dotA.toFixed(3) + ')'; ctx.fill(dots[t]); }
         });
         if (labelA > 0) drawLabels(labelA);
       }
+      /* switch phases only after a full frame is drawn, so no frame is ever half-drawn */
+      if (next === 'group') { phase = 'group'; phaseStart = now; startGroup(); }
+      else if (next === 'form') { phase = 'form'; phaseStart = now; startForm(); }
     } else {
       project();
       var lit = MAP.lit(), glow = {}, any = false;
