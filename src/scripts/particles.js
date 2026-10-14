@@ -25,9 +25,12 @@ function start() {
   var thin = small ? 0.5 : 1;
 
   /* ---------- particles ---------- */
-  var nodes = MAP.nodes, P = [];
+  /* a fixed particle budget keeps density (and frame rate) steady as the map grows */
+  var nodes = MAP.nodes, P = [], BUDGET = small ? 1400 : 2800, raw = 0;
+  nodes.forEach(function (n) { raw += COUNT[n.type] * thin; });
+  var scale = Math.min(1, BUDGET / raw);
   nodes.forEach(function (n, ni) {
-    var c = Math.round(COUNT[n.type] * thin);
+    var c = Math.max(small ? 4 : 8, Math.round(COUNT[n.type] * thin * scale));
     for (var i = 0; i < c; i++) {
       var g = gauss();
       P.push({
@@ -36,7 +39,7 @@ function start() {
         a: Math.random() * Math.PI * 2,
         w: (Math.random() - 0.5) * 0.35 / (1 + Math.abs(g)),
         s: Math.random() < 0.08 ? 1.9 : 0.8 + Math.random() * 0.7,
-        tw: Math.random() * Math.PI * 2,
+        tb: P.length % 4,
         lx: 0, ly: 0, x: 0, y: 0, px: 0, py: 0, fx: 0, fy: 0, d: Math.random()
       });
     }
@@ -236,22 +239,28 @@ function start() {
       });
 
       
+      /* batch dots into a few paths (type x lit x twinkle x landing) instead of one fill per particle */
+      var batch = {};
       for (var j = 0; j < P.length; j++) {
         var p = P[j], tg = dustTarget(p, time); if (!tg) continue;
         var h2 = nodeXY[p.n]; if (!h2.vis) continue;
-        var x = tg.x, y = tg.y, e = 1;
+        var x = tg.x, y = tg.y, eb = 4;
         if (phase === 'form') {
           /* each particle flies from its group to its dot on the map */
-          e = ease(clamp((formT - p.d * 0.35) / 0.65, 0, 1));
-          x = p.fx + (x - p.fx) * e; y = p.fy + (y - p.fy) * e;
+          var e = ease(clamp((formT - p.d * 0.35) / 0.65, 0, 1));
+          x = p.fx + (x - p.fx) * e; y = p.fy + (y - p.fy) * e; eb = Math.round(e * 4);
         }
-        var on2 = glow[nodes[p.n].id], tw = 0.75 + 0.25 * Math.sin(time * 1.7 + p.tw);
-        var al2 = (on2 ? 0.95 : any ? 0.16 : 0.5) * tw;
-        if (phase === 'form') al2 = 0.9 + (al2 - 0.9) * e;
-        var c2 = COLORS[p.type];
-        ctx.fillStyle = 'rgba(' + c2[0] + ',' + c2[1] + ',' + c2[2] + ',' + al2 + ')';
+        var on2 = glow[nodes[p.n].id] ? 1 : 0, key = p.type + on2 + p.tb + eb;
+        var b = batch[key] || (batch[key] = { t: p.type, on: on2, tb: p.tb, eb: eb, path: new Path2D() });
         var s = p.s * (on2 ? 1.25 : 1);
-        ctx.fillRect(x - s / 2, y - s / 2, s, s);
+        b.path.rect(x - s / 2, y - s / 2, s, s);
+      }
+      for (var k in batch) {
+        var bb = batch[k], c2 = COLORS[bb.t], tw = 0.75 + 0.25 * Math.sin(time * 1.7 + bb.tb * 1.5708);
+        var al2 = (bb.on ? 0.95 : any ? 0.16 : 0.5) * tw;
+        if (phase === 'form') al2 = 0.9 + (al2 - 0.9) * (bb.eb / 4);
+        ctx.fillStyle = 'rgba(' + c2[0] + ',' + c2[1] + ',' + c2[2] + ',' + al2.toFixed(3) + ')';
+        ctx.fill(bb.path);
       }
       if (phase === 'form' && groups) { var la = clamp(1 - formT * 3, 0, 1); if (la > 0) drawLabels(la); }
       if (phase === 'form' && formT >= 1) { phase = 'live'; setTimeout(skip, 700); }
