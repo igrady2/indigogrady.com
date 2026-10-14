@@ -7,7 +7,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "eval:ask": "node scripts/eval-ask.mjs --misses"
+    "eval:ask": "node scripts/eval-ask.mjs --misses",
+    "eval:holdout": "node scripts/eval-ask.mjs --misses --file tests/ask-holdout.tsv",
+    "eval:jev": "node scripts/eval-ask.mjs --jev --misses"
   },
   "dependencies": {
     "astro": "7.3.8",

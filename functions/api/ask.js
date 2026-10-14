@@ -65,7 +65,19 @@ export async function pick(q, env, fetchImpl = fetch) {
   return { index: null, alts: altsFrom(ans), p };
 }
 
-export async function onRequestPost({ request, env }) {
+/* Miss log: with a KV namespace bound as ASK_LOG, every question that reaches this
+   function is saved for 180 days, keyed so the Cloudflare dashboard's KV list reads
+   like a log: "2026-10-14T14:30:00Z | miss | how do you handle conflict". */
+function logAsk(env, ctx, q, result) {
+  if (!env.ASK_LOG) return;
+  const outcome = result.error ? 'error' : result.index == null ? (result.alts && result.alts.length ? 'did-you-mean' : 'miss') : 'jev:' + ANSWERS[result.index].id;
+  const key = `${new Date().toISOString().slice(0, 19)}Z | ${outcome} | ${q.slice(0, 200)}`;
+  const value = JSON.stringify({ q, outcome, p: result.p, alts: (result.alts || []).map((i) => ANSWERS[i].id) });
+  const put = env.ASK_LOG.put(key, value, { expirationTtl: 180 * 86400 }).catch(() => {});
+  if (ctx && ctx.waitUntil) ctx.waitUntil(put);
+}
+
+export async function onRequestPost({ request, env, waitUntil }) {
   let q = '';
   try { q = String((await request.json()).q || '').trim().slice(0, MAX_Q); } catch (e) { return json({ index: null }, 400); }
   if (!q || !env.TYPESAFE_API_KEY) return json({ index: null });
@@ -75,10 +87,11 @@ export async function onRequestPost({ request, env }) {
   const key = new Request('https://ask.cache/' + encodeURIComponent(q.toLowerCase().replace(/\s+/g, ' ')));
   if (cache) {
     const hit = await cache.match(key);
-    if (hit) return json(await hit.json());
+    if (hit) { const body = await hit.json(); logAsk(env, { waitUntil }, q, body); return json(body); }
   }
   let result;
-  try { result = await pick(q, env); } catch (e) { return json({ index: null }); }
+  try { result = await pick(q, env); } catch (e) { result = { index: null, error: 'fetch' }; logAsk(env, { waitUntil }, q, result); return json({ index: null }); }
+  logAsk(env, { waitUntil }, q, result);
   if (cache && !result.error) {
     await cache.put(key, new Response(JSON.stringify({ index: result.index, alts: result.alts || [] }), { headers: { 'Cache-Control': 'max-age=86400' } }));
   }

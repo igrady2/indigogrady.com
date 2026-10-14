@@ -50,14 +50,21 @@ function sim(qt, pt) {
   pt.forEach((t) => { pw += idf(t); });
   return qw && pw ? shared / Math.sqrt(qw * pw) : 0;
 }
+/* how much of the question (by word weight) any phrasing of this answer shares */
+function cover(qt, doc) {
+  let qw = 0, shared = 0; const all = new Set(doc.flat());
+  qt.forEach((t) => { const w = idf(t); qw += w; if (all.has(t)) shared += w; });
+  return qw ? shared / qw : 0;
+}
 export function simScores(qText) {
   const qt = tokens(qText);
   return DOCS.map((doc) => doc.reduce((best, pt) => Math.max(best, sim(qt, pt)), 0));
 }
 
 /* ---------- decision ---------- */
-export const SURE = 0.5;   // confident enough to answer outright
+export const SURE = 0.6;   // confident enough to answer outright
 export const MAYBE = 0.3;  // close enough to offer as "Did you mean"
+export const COVER = 0.5;  // share of the question's weight the answer must cover to be sure
 /* Returns { index, alts, ranked }: index is the confident pick or null;
    alts are up to two plausible answers when nothing is confident. */
 export function match(qText) {
@@ -65,7 +72,9 @@ export function match(qText) {
   const ranked = ANSWERS.map((a, index) => ({ index, score: ss[index] + Math.min(ks[index], 8) * 0.03 }))
     .filter((r) => r.score > 0).sort((a, b) => b.score - a.score);
   const top = ranked[0], second = ranked[1];
-  const sure = top && top.score >= SURE && (!second || top.score - second.score >= 0.05);
+  /* "What's your favorite food?" shares only "favorite" with a real answer: not sure, so Jev decides */
+  const covered = top && (ks[top.index] >= 4 || cover(tokens(qText), DOCS[top.index]) >= COVER);
+  const sure = top && covered && top.score >= SURE && (!second || top.score - second.score >= 0.05);
   if (sure) return { index: top.index, alts: [], ranked };
   return { index: null, alts: ranked.filter((r) => r.score >= MAYBE).slice(0, 2).map((r) => r.index), ranked };
 }
