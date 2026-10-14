@@ -53,7 +53,8 @@ function listing(names, max = 4) {
   return shown.length > 1 ? shown.slice(0, -1).join(', ') + ' and ' + shown[shown.length - 1] : shown[0];
 }
 
-function toolFact(id) {
+/* only: a role id the question names; then answer about that company, or not at all */
+function toolFact(id, only) {
   const t = byId[id], roles = [], work = {};
   (nbr[id] || []).forEach((m) => {
     const o = byId[m];
@@ -61,7 +62,7 @@ function toolFact(id) {
     if (o.type === 'work') (work[o.exp] = work[o.exp] || []).push(o);
   });
   const order = N.filter((n) => n.type === 'role').map((n) => n.id).concat(['own']);
-  const places = order.filter((r) => roles.includes(r) || work[r]).map((r) => {
+  const places = order.filter((r) => (roles.includes(r) || work[r]) && (!only || r === only)).map((r) => {
     const names = (work[r] || []).map((w) => w.name);
     if (r === 'own') return `in my own projects, on ${listing(names)}`;
     return `at ${byId[r].name} (${when(byId[r])})` + (names.length ? `, on ${listing(names)}` : '');
@@ -84,21 +85,21 @@ function roleFact(id) {
 
 /* yes/no "have you used X" questions, or just the tool's name */
 const USE = /^ (have|do|did|are|can|is|has|does|ever|any|experience|familiar|know|used|worked|proficient|comfortable)\b.* (use|used|using|uses|know|knows|familiar|experience|experienced|work with|worked with|working with|proficient|comfortable|tried|touched)\b/;
-const TIME = / (when|how long|what years|which years|dates|date|start|started|leave|left|tenure)\b/;
+/* not "leave" or "left": "Why did you leave Razor Sparrow?" belongs to a written answer */
+const TIME = / (when|how long|what years|which years|dates|date|start|started|tenure)\b/;
 
 /* Returns a fact answer { id, q, a, nodes, fact } or null.
    written: the written answer the matcher is confident in, if any. A date question
    defers to a written answer about dates; tool questions always take precedence. */
 export function fact(qText, written) {
   const q = norm(qText);
-  const tools = found(q, TOOL_WORDS);
-  if (tools.length === 1) {
+  const tools = found(q, TOOL_WORDS), roles = found(q, ROLE_WORDS);
+  if (tools.length === 1 && roles.length <= 1) {
     const rest = q.replace(/ (have|has|you|he|indigo|ever|any|do|does|did|used|use|experience|with|in|of|the)\b/g, ' ').trim();
     const justName = TOOL_WORDS[tools[0]].some((w) => norm(w).trim() === rest);
-    if (USE.test(q) || / experience (with|in|using) /.test(' ' + q) || justName) return toolFact(tools[0]);
+    if (USE.test(q) || / experience (with|in|using) /.test(' ' + q) || justName) return toolFact(tools[0], roles[0]);
   }
-  const roles = found(q, ROLE_WORDS);
   const datesWritten = written && /^(how long|when)/i.test(written.q);
-  if (!datesWritten && roles.length === 1 && TIME.test(q)) return roleFact(roles[0]);
+  if (!datesWritten && roles.length === 1 && TIME.test(q) && !/ why /.test(q)) return roleFact(roles[0]);
   return null;
 }

@@ -196,3 +196,6 @@ how long did you work at bistro 360	fact:bi
 how long were you at cheesetique	fact:ch
 when did you start at autopilotpr	fact:ap|t-ap
 how do you use claude day to day	ai|a-code|tools
+why did you leave razor sparrow	r-leave
+did you use jira at code power	fact:t-jira
+have you used gohighlevel at razor sparrow	fact:t-ghl
