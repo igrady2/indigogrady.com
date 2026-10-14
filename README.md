@@ -23,9 +23,17 @@ npm run build    # static site in dist/ (needs Node 22.12 or newer)
 
 ## How Ask works
 
+1. Yes/no tool questions ("Have you used Stripe?") and date questions ("When were you at Triumvirate?") are answered from the map itself by `src/data/facts.js`: where each tool shows up, and each role's title and dates. Add a tool's other names to `TOOL_WORDS` there when you add a tool dot. A written answer about dates still wins over the generated one.
 1. In the browser, `src/data/match.js` compares the question with each answer's question, keywords and extra phrasings (`src/data/phrasings.js`, about 850 ways people ask the same things). A clear winner is answered instantly.
 2. Anything else is posted to `/api/ask`. That function sends the question and the list of answers to [Jev](https://docs.typesafe.ai) (TypeSafe's System One model). Jev returns which answer fits, or "none". It never writes text, so the page only ever shows Indigo's own words.
 3. If Jev isn't confident (top probability below 0.5), the box offers up to two near misses as "Did you mean". With no near miss, it invites the visitor to ask Indigo on LinkedIn and suggests questions.
+
+Scoring:
+- `npm run eval:ask` scores the in-browser matcher against `tests/ask-questions.tsv`. Phrasings were tuned against this set, so it reads high.
+- `npm run eval:holdout` scores against `tests/ask-holdout.tsv`, which holds questions no phrasing was tuned to. Don't add phrasings copied from it.
+- `TYPESAFE_API_KEY=... npm run eval:jev` sends the questions the page isn't sure about to Jev, as the live site does, to give the end-to-end score.
+
+Miss log: bind a KV namespace to the Pages project as `ASK_LOG` (Settings > Bindings). Every question that reaches `/api/ask` is then saved for 180 days, with keys like `2026-10-14T14:30:00Z | miss | how do you handle conflict`, so the dashboard's KV list reads as a log. Write answers for what real visitors ask that gets `miss` or `did-you-mean`.
 
 To grow coverage, add phrasings to `src/data/phrasings.js` (questions only, never new facts) and run `npm run eval:ask`. It scores the in-browser matcher against `tests/ask-questions.tsv`: how many questions get the right answer, the wrong one, or none.
 

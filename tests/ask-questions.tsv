@@ -158,7 +158,7 @@ are you data driven	data
 did you go to college	edu
 what is your degree	edu
 what software tools do you know	tools
-do you use jira	tools|prog
+do you use jira	fact:t-jira|tools|prog
 what did you do before software	before
 when can you start	avail
 are you available for full time	avail
@@ -184,3 +184,18 @@ have you used salesforce	none
 do you know python	tech
 how do you manage project risk	w-risk
 what if there is no money for QA	w-risk
+have you used stripe	fact:t-stripe
+ever used bigquery	fact:t-bq
+experience with github?	fact:t-gh
+do you know airtable	fact:t-air
+are you familiar with gohighlevel	fact:t-ghl
+have you worked with google classroom	fact:t-gc
+do you use confluence	fact:t-conf
+when were you at triumvirate	fact:te
+how long did you work at bistro 360	fact:bi
+how long were you at cheesetique	fact:ch
+when did you start at autopilotpr	fact:ap|t-ap
+how do you use claude day to day	ai|a-code|tools
+why did you leave razor sparrow	r-leave
+did you use jira at code power	fact:t-jira
+have you used gohighlevel at razor sparrow	fact:t-ghl
