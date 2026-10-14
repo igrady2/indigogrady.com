@@ -306,5 +306,11 @@ html, body { background-color: #05071a; background-image: radial-gradient(1400px
 body.read .edge { stroke: #8f9cff; opacity: 0.12; }
 body.read .edge.glow { stroke: var(--work); opacity: 0.7; }
 
-/* hero headline: keep "vision to life." on one line when the screen is wide enough */
-@media (min-width: 420px) { .hero h1 span { white-space: nowrap; } }
+/* hero headline: one deliberate line each, sized to fit the column so lines never re-wrap */
+.hero { container-type: inline-size; }
+.hero h1.headline .ln { display: block; }
+.hero h1.headline .ln:not(.accent) { background: none; -webkit-background-clip: initial; background-clip: initial; color: inherit; }
+@media (min-width: 420px) {
+  .hero h1.headline { font-size: min(4.5rem, 8cqi); }
+  .hero h1.headline .ln { white-space: nowrap; }
+}
