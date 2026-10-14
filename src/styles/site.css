@@ -305,3 +305,6 @@ html, body { background-color: #05071a; background-image: radial-gradient(1400px
 #sky .node circle.dot { filter: drop-shadow(0 0 4px currentColor); }
 body.read .edge { stroke: #8f9cff; opacity: 0.12; }
 body.read .edge.glow { stroke: var(--work); opacity: 0.7; }
+
+/* hero headline: keep "vision to life." on one line when the screen is wide enough */
+@media (min-width: 420px) { .hero h1 span { white-space: nowrap; } }
