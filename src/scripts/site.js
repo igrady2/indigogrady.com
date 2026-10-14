@@ -190,6 +190,7 @@ function showPanel(n) {
   if (n.sub && !/^(Tool|Platform|Skill)$/.test(n.sub)) h += '<span class="sub">' + esc(n.sub) + '</span>';
   if (n.quote) h += '<q>' + esc(n.quote) + '</q>';
   if (n.body) h += '<p>' + esc(n.body) + '</p>';
+  if (n.letter) h += '<div class="letter"><h4>FULL RECOMMENDATION</h4>' + n.letter.map(function (p) { return '<p>' + esc(p).replace(/\n/g, '<br>') + '</p>'; }).join('') + '</div>';
   if (n.result) h += '<p class="result">' + esc(n.result) + '</p>';
   if (n.url) h += '<p><a class="ext" href="' + esc(n.url) + '" target="_blank" rel="noopener">' + esc(n.urlLabel || 'Visit') + ' ↗</a></p>';
   if (n.todo) h += '<p class="todo">To map: ' + esc(n.todo) + '</p>';
