@@ -13,6 +13,15 @@ const { title = 'Indigo Grady', description = 'Indigo Grady: product and operati
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap">
+    <script is:inline>
+      /* show the particle intro once per visit; ?intro forces it, reduced motion skips it */
+      (function () {
+        var d = document.documentElement, seen = false;
+        try { seen = sessionStorage.getItem('ig-intro') === '1'; } catch (e) {}
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (/[?&]intro\b/.test(location.search) || (!seen && !reduce)) d.classList.add('intro');
+      })();
+    </script>
   </head>
   <body>
     <slot />
