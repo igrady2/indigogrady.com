@@ -1,4 +1,5 @@
 import * as d3 from 'd3';
+import { ANSWERS, SUGGEST } from '../data/answers.js';
 /* =========================================================
    DATA: one source of truth for the page, the map, and Ask
    ========================================================= */
@@ -13,9 +14,10 @@ var N = [
   { id: "me", type: "me", name: "Indigo Grady", sub: "Product and operations leader · Remote", body: "Start anywhere. Every role, project, recommendation and skill on this map links back to real work." },
   { id: "ap", type: "role", exp: "ap", name: "AutoPilotPR", sub: "Founding COO (part-time) · Oct 2026 – now", body: "Business strategy and Claude-based agentic workflows, with a focus on keeping token costs low as usage grows." },
   { id: "rs", type: "role", exp: "rs", name: "Razor Sparrow", sub: "General Manager · Aug 2023 – Sep 2026", body: "Second hire and, for three years, the entire product function at a remote SaaS and edtech company." },
-  { id: "cp", type: "role", exp: "cp", name: "Code Power", sub: "Product Coordinator · an Optic Power company · May 2021 – Jun 2023", body: "Oversaw eight client projects across six industries and was the main liaison for seven clients." },
+  { id: "cp", type: "role", exp: "cp", name: "Code Power", sub: "Product Coordinator · an Optic Power company · May 2021 – Jul 2023", body: "Code Power was the software delivery business of the Optic Power group. I joined early, when it had about ten developers, and oversaw eight client projects across six industries as the main liaison for seven clients." },
   { id: "te", type: "role", exp: "early", name: "Triumvirate Environmental", sub: "Environmental Specialist · Sep 2018 – Jul 2020", body: "Rookie of the Year, 2019." },
-  { id: "bi", type: "role", exp: "early", name: "Bistro 360", sub: "General Manager", body: "Hired, trained and scheduled a team of 12 to 20 and managed more than 15 distributors." },
+  { id: "bi", type: "role", exp: "early", name: "Bistro 360", sub: "General Manager · Arlington, VA · Feb 2017 – May 2018", body: "Ran a restaurant with a bar, dining room and retail market. Hired, trained and scheduled a front-of-house team of 12 to 20, managed more than 15 wine and beer distributors, and ordered for an inventory of 300+ wines, beers and liquors on a strict weekly budget." },
+  { id: "ch", type: "role", exp: "early", name: "Cheesetique", sub: "Assistant Front-of-House Manager · Arlington, VA · Jun 2016 – Feb 2017", body: "Promoted from server to bartender to assistant front-of-house manager within five months." },
   { id: "w-flow", type: "work", exp: "ap", name: "Facts-locked reply flow", sub: "AutoPilotPR", body: "The model writes the words, and code places the facts from source systems, so a draft can't invent a price or a date." },
   { id: "w-stab", type: "work", exp: "rs", name: "Stabilize, then grow", sub: "Razor Sparrow", body: "Traced much of the support volume to product defects, hired a senior engineer to fix them, and wrote the backlog that guided the work.", result: "First response time fell from weeks to under 24 hours." },
   { id: "w-tickets", type: "work", exp: "rs", name: "Support ticket system", sub: "Razor Sparrow", body: "Routed work by need, prompted follow-up, and closed or reopened cases by clear rules, backed by SOPs and templates." },
@@ -30,15 +32,17 @@ var N = [
   { id: "w-cc", type: "work", exp: "rs", name: "ClassCloak", sub: "Chrome extension · launched 2026", body: "Swaps student names and other sensitive details on screen for placeholders like \u201cStudent A,\u201d so teachers can share screenshots and recordings safely.", url: "https://chromewebstore.google.com/detail/classcloak-protect-studen/bicalpdiddceklkfbbfjpnipfhhjpgnh", urlLabel: "See it on the Chrome Web Store" },
   { id: "w-gliders", type: "work", exp: "rs", name: "GLIDERS ambassador program", sub: "Razor Sparrow · launched 2026", body: "A free ambassador community for teachers who use Razor Sparrow's tools: early access to new features, a direct feedback line to leadership, and support to present at teacher conferences. I oversaw the launch, directing a consultant and a new hire.", url: "https://join.razorsparrow.com/gliders", urlLabel: "See GLIDERS" },
   { id: "w-gt", type: "work", exp: "rs", name: "GradeTransferer", sub: "Flagship Chrome extension", body: "About 70,000 users and a 4.8-star rating on the Chrome Web Store.", url: "https://chromewebstore.google.com/detail/gradetransferer-transfer/boapjdphamdkfjfdibbdpcemcdncfhjf", urlLabel: "See it on the Chrome Web Store" },
-  { id: "w-connect", type: "work", exp: "cp", name: "Connect Marketing Task Manager", sub: "Code Power client project · 2022–2023", body: "A desktop app that builds a personal schedule from tasks and recurring rituals, with AirTable sync and Google and Outlook calendar integration. I was the business analyst and product owner proxy: roadmap and backlog prioritization with the client, biweekly status and release reports, and QA across more than 20 releases. The client's president built it to save his own time first, then planned to pilot it at his workplace and use the results as the case for wider rollout.", result: "The client's president wrote that the product “undeniably benefitted.”" },
-  { id: "w-build", type: "work", exp: "cp", name: "BUILD Fam-Biz", sub: "Code Power client project · 2022–2023", body: "A game-based entrepreneurship course for students in grades 7 to 12, with grades sent back to the school's LMS. I was the day-to-day client lead: requirements sessions, the Jira backlog, and running the game's calculations in AirTable to save developer time. I stayed BUILD's go-to advisor through their 2023 restructure.", url: "https://build.org/fambiz/outreachfambiz/", urlLabel: "See Fam-Biz on build.org" },
+  { id: "w-connect", type: "work", exp: "cp", name: "Connect Marketing Task Manager", sub: "Code Power client project · 2022–2023", body: "A desktop app that builds a personal schedule from tasks and recurring rituals, pulling tasks in from the client's AirTable and syncing with Google and Outlook calendars. Built with Electron, React, TypeScript and MongoDB. I was the business analyst and product owner proxy: roadmap and backlog prioritization with the client, biweekly status and release reports, and QA across more than 20 releases. The client's president built it to save his own time first, then planned to pilot it at his workplace and use the results as the case for wider rollout.", result: "The client's president wrote that the product “undeniably benefitted.”" },
+  { id: "w-build", type: "work", exp: "cp", name: "BUILD Fam-Biz", sub: "Code Power client project · 2022–2023", body: "A game-based entrepreneurship course for students in grades 7 to 12, with grades sent back to the school's LMS. Built with Next.js, with AirTable as the content admin. I was the day-to-day client lead: requirements sessions, the Jira backlog, and running the game's calculations in AirTable to save developer time. I stayed BUILD's go-to advisor through their 2023 restructure.", url: "https://build.org/fambiz/outreachfambiz/", urlLabel: "See Fam-Biz on build.org" },
   { id: "w-dc", type: "work", exp: "cp", name: "BUILD Design Challenge", sub: "Code Power client project · 2022", body: "A second BUILD learning app. I worked through more than 130 wireframes one by one with the client to pin down requirements, then relayed them to the developers.", url: "https://build.org/challenge/", urlLabel: "See the Design Challenge on build.org" },
-  { id: "w-mente", type: "work", exp: "cp", name: "Mente Serena", sub: "Code Power client project", body: "An all-in-one practice app for therapists, built for founders who are therapists. As project coordinator, I stayed online past midnight with the developers at the end of the project and found the bug pattern that unblocked delivery of the admin panel." },
+  { id: "w-mente", type: "work", exp: "cp", name: "Mente Serena", sub: "Code Power client project", body: "A platform connecting patients in Puerto Rico with licensed mental-health professionals, built for founders who are clinical psychologists. It launched publicly in 2024. As project coordinator, I stayed online past midnight with the developers at the end of the project and found the bug pattern that unblocked delivery of the admin panel." },
   { id: "w-mundo", type: "work", exp: "cp", name: "MundoLMS", sub: "Code Power client project", body: "A custom learning platform for Mr. D Math, an accredited online math school, built from the ground up. I was the business analyst and client lead, gathering requirements with the founder from the start." },
-  { id: "w-walk", type: "work", exp: "cp", name: "Walkboard Partner Portal", sub: "Code Power client project", body: "An internal web app for Walkboard, a moving-services booking platform, to manage its partner companies. I was the business analyst and client lead, turning new business processes into user flows for the developer, including map-based pickup and drop-off and text and email notifications." },
-  { id: "w-friend", type: "work", exp: "cp", name: "Friendbase", sub: "Code Power client project", body: "A multiplayer social avatar game. I was the business analyst and client lead." },
+  { id: "w-walk", type: "work", exp: "cp", name: "Walkboard Partner Portal", sub: "Code Power client project", body: "An internal web app for Walkboard, a moving-services booking platform, to manage its partner companies. I was the business analyst and client lead, turning new business processes into user flows for the developer, including map-based pickup and drop-off and text and email notifications. Built with React, Firebase and Google Cloud functions, Google Maps, Twilio and SendGrid." },
+  { id: "w-friend", type: "work", exp: "cp", name: "Friendbase", sub: "Code Power client project", body: "A remake of Friendbase, a social virtual world where teens hang out as avatars. I was the business analyst and client lead." },
   { id: "w-neuro", type: "work", exp: "cp", name: "NeuroID SDK", sub: "Code Power client project", body: "A mobile SDK for Android and iOS. I kept reporting flowing between the developers and the client." },
   { id: "w-fda", type: "work", exp: "early", name: "FDA inventory migration", sub: "Triumvirate Environmental", body: "Oversaw migration of the FDA's complete chemical inventory into a new system and built a stop-gap process for the six months between contracts." },
+  { id: "w-hb", type: "work", exp: "early", name: "Employee handbook and training manual", sub: "Bistro 360", body: "Wrote the restaurant's new handbook and training manual from scratch, including sustainability practices that cut single-use items and food waste." },
+  { id: "w-liq", type: "work", exp: "early", name: "First liquor program", sub: "Cheesetique", body: "Planned and ran the store's first liquor program from concept to launch: the craft cocktail list, distributor ordering, and cost analysis and tracking." },
   { id: "p-lauren", type: "person", exp: "rs", name: "Lauren Samaras", sub: "Customer Support and Success Specialist · reported to Indigo", quote: "Indigo is an exceptional leader who consistently balances the bigger picture with the operational details needed to bring ideas to life.", lead: true },
   { id: "p-dev", type: "person", exp: "rs", name: "Lead Software Developer", sub: "Razor Sparrow · engineering partner", quote: "Indigo excelled at breaking down complex or loosely defined requests into clear user stories with acceptance criteria, effort estimates, and priority rankings." },
   { id: "p-neil", type: "person", exp: "cp", name: "Neil Myers", sub: "President, Connect Marketing · client", quote: "He frequently provided insightful suggestions, either simplifying our specifications or prompting us to consider the broader, long-term implications of our requests." },
@@ -61,7 +65,7 @@ var N = [
   { id: "t-gpt", type: "skill", name: "ChatGPT", sub: "Tool" }
 ];
 var L = [
-  ["me","ap"],["me","rs"],["me","cp"],["me","te"],["me","bi"],
+  ["me","ap"],["me","rs"],["me","cp"],["me","te"],["me","bi"],["me","ch"],["bi","w-hb"],["ch","w-liq"],["s-sys","w-hb"],["s-lead","w-hb"],
   ["ap","w-flow"],
   ["rs","w-stab"],["rs","w-tickets"],["rs","w-backlog"],["rs","w-portal"],["rs","w-accounts"],["rs","w-pricing"],["rs","w-ai"],["rs","w-launch"],["rs","w-gt"],["rs","w-gs"],["rs","w-ems"],["rs","w-cc"],["rs","w-gliders"],
   ["w-stab","w-tickets"],["w-stab","w-backlog"],["t-jira","cp"],["t-jira","w-build"],["t-conf","cp"],["t-taiga","w-backlog"],["t-air","w-build"],["t-air","w-dc"],["t-air","w-connect"],["t-claude","w-ai"],["t-claude","w-flow"],["t-claude","ap"],["t-cursor","w-ai"],["t-gpt","w-portal"],["w-launch","w-gs"],["w-launch","w-ems"],["w-launch","w-cc"],["w-gliders","w-gt"],["s-cust","w-gliders"],["s-lead","w-gliders"],["s-req","w-gs"],["s-req","w-ems"],["s-req","w-cc"],["w-accounts","w-pricing"],
@@ -97,8 +101,14 @@ var hasD3 = typeof d3 !== 'undefined';
 var sky = document.getElementById('sky');
 var state = { mode: 'read', exp: 'all', types: { role: true, work: true, person: true, skill: true }, focus: null, glow: [] };
 var nodeEls = {}, edgeEls = [], zoomer, rootG, POS = {};
+function sideMap() { return window.innerWidth >= 900; }
+function syncView() { var r = sky.getBoundingClientRect(); sky.setAttribute('viewBox', '0 0 ' + Math.round(r.width) + ' ' + Math.round(r.height)); }
 function fitArea() {
   var W = window.innerWidth, H = window.innerHeight;
+  if (state.mode === 'read') {
+    if (sideMap()) return { x0: W * 0.56 + 28, y0: 64, x1: W - 28, y1: H - 56 };
+    return { x0: 14, y0: 58, x1: W - 14, y1: sky.getBoundingClientRect().height - 18 };
+  }
   if (W <= 760) return { x0: 16, y0: 200, x1: W - 16, y1: H * 0.56 };
   return { x0: 24, y0: 120, x1: W - 22 * 16 - 56, y1: H - 36 };
 }
@@ -109,9 +119,11 @@ function fit(ids) {
   var pad = 70, minx = Math.min.apply(null, xs) - pad, maxx = Math.max.apply(null, xs) + pad, miny = Math.min.apply(null, ys) - pad / 2, maxy = Math.max.apply(null, ys) + pad;
   var a = fitArea(), k = Math.min((a.x1 - a.x0) / (maxx - minx), (a.y1 - a.y0) / (maxy - miny), 1.8);
   k = Math.max(0.35, k);
+  /* in the side panel the map is zoomed out to fit; keep dots and labels at their normal size */
+  sky.style.setProperty('--inv', state.mode === 'read' ? String(Math.min(sideMap() ? 2.4 : 1.25, Math.max(1, 1 / k))) : '1');
   var tx = a.x0 + ((a.x1 - a.x0) - (maxx - minx) * k) / 2 - minx * k, ty = a.y0 + ((a.y1 - a.y0) - (maxy - miny) * k) / 2 - miny * k;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  d3.select(sky).transition().duration(reduce ? 0 : 650).call(zoomer.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
+  d3.select(sky).transition().duration(reduce || state.mode === 'read' ? 0 : 650).call(zoomer.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
 }
 function visibleIds() { return N.filter(function (n) { return visible(n); }).map(function (n) { return n.id; }); }
 function focusIds(id) { return [id].concat(Array.from(nbr[id])); }
@@ -136,9 +148,9 @@ function layout(W, H) {
 function buildSky() {
   if (!hasD3) return;
   var W = window.innerWidth, H = window.innerHeight;
-  sky.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
   sky.innerHTML = '';
-  var L2 = layout(W, H); POS = L2.pos;
+  /* lay the network out for the space it lives in most of the time: the side panel, or a phone band */
+  var L2 = sideMap() ? layout(W * 0.44, H) : layout(W, Math.max(420, W * 0.95)); POS = L2.pos;
   var svg = d3.select(sky);
   rootG = svg.append('g');
   var drift = rootG.append('g').attr('class', 'drift');
@@ -164,7 +176,6 @@ function buildSky() {
     .on('zoom', function (ev) { rootG.attr('transform', ev.transform); });
   svg.call(zoomer);
   applyMode(); paint();
-  if (state.mode === 'explore') fit(state.focus ? focusIds(state.focus) : visibleIds());
 }
 
 function inExp(n) {
@@ -176,11 +187,13 @@ function visible(n) { return state.mode === 'read' || n.type === 'me' || (state.
 
 function paint() {
   var f = state.mode === 'explore' ? state.focus : null;
-  var glow = state.mode === 'read' ? new Set(state.glow) : new Set();
+  var glow = state.mode === 'read' ? new Set(state.glow) : new Set(), pre = state.mode === 'read' ? new Set(state.pre || []) : new Set();
+  document.body.classList.toggle('lit', glow.size + pre.size > 0 && !(glow.size >= 5 && glow.has('me') && state.glowAll));
   N.forEach(function (n) {
     var el = nodeEls[n.id]; if (!el) return;
     el.style.display = visible(n) ? '' : 'none';
     el.classList.toggle('glow', glow.has(n.id));
+    el.classList.toggle('pre', pre.has(n.id) && !glow.has(n.id));
     el.classList.toggle('focus', f === n.id);
     el.classList.toggle('dim', !!f && n.id !== f && !nbr[f].has(n.id));
     if (state.mode === 'explore') { el.setAttribute('tabindex', '0'); el.setAttribute('role', 'button'); el.setAttribute('aria-label', TYPES[n.type].label + ': ' + n.name); }
@@ -206,7 +219,8 @@ function applyMode() {
   xui.setAttribute('aria-hidden', String(state.mode !== 'explore'));
   page.setAttribute('aria-hidden', String(state.mode === 'explore'));
   if ('inert' in page) page.inert = state.mode === 'explore';
-  if (state.mode === 'read' && zoomer) d3.select(sky).call(zoomer.transform, d3.zoomIdentity);
+  syncView();
+  if (state.mode === 'read') fit(N.map(function (n) { return n.id; }));
 }
 document.querySelectorAll("[data-open]").forEach(function (b) { b.addEventListener("click", function () { setMode("explore", b.getAttribute("data-open")); }); });
 function setMode(m, focusId) {
@@ -269,88 +283,43 @@ function showPanel(n) {
 /* =========================================================
    READ MODE: the section you're reading lights up its part of the sky
    ========================================================= */
-var sections = Array.prototype.slice.call(document.querySelectorAll('[data-nodes]')).filter(function (s) { return !s.classList.contains('case'); });
-var current = { section: null, slide: 0 };
+var mapNow = document.getElementById('mapNow');
+function glowTo(ids, label, all) { state.glow = ids; state.glowAll = !!all; state.pre = []; if (label) mapNow.textContent = label; paint(); }
 function setGlowFrom(el) {
   var ids = (el.getAttribute('data-nodes') || '').split(/\s+/).filter(Boolean);
-  if (el.id === 'work') { var c = document.querySelectorAll('.case')[current.slide]; ids = (c.getAttribute('data-nodes') || '').split(/\s+/); }
-  state.glow = ids; paint();
+  if (!ids.length) return;
+  document.querySelectorAll('.case.lit').forEach(function (c) { c.classList.toggle('lit', c === el); });
+  glowTo(ids, el.getAttribute('data-label') || '', el.id === 'top');
 }
+var sections = Array.prototype.slice.call(document.querySelectorAll('[data-nodes]'));
 if ('IntersectionObserver' in window) {
   var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) { if (en.isIntersecting) { current.section = en.target; setGlowFrom(en.target); } });
+    entries.forEach(function (en) { if (en.isIntersecting) setGlowFrom(en.target); });
   }, { rootMargin: '-45% 0px -45% 0px' });
-  sections.concat([document.getElementById('work')]).forEach(function (s) { io.observe(s); });
+  sections.forEach(function (s) { io.observe(s); });
 }
-
-/* carousel */
-(function () {
-  var track = document.getElementById('cases'), slides = Array.prototype.slice.call(track.children);
-  var dots = document.getElementById('dots'), prev = document.getElementById('prev'), next = document.getElementById('next'), count = document.getElementById('count');
-  slides.forEach(function (s, i) {
-    s.setAttribute('aria-roledescription', 'slide'); s.setAttribute('aria-label', (i + 1) + ' of ' + slides.length);
-    var d = document.createElement('button'); d.type = 'button'; d.className = 'dot'; d.setAttribute('aria-label', 'Show case study ' + (i + 1));
-    d.addEventListener('click', function () { go(i); }); dots.appendChild(d);
+/* hovering or focusing a case or role lights its part of the map */
+document.querySelectorAll('.case').forEach(function (c) {
+  ['mouseenter', 'focusin'].forEach(function (ev) { c.addEventListener(ev, function () { setGlowFrom(c); }); });
+});
+var ROLE_IDS = ['ap', 'rs', 'cp', 'te', 'bi', 'ch'];
+document.querySelectorAll('.roles li').forEach(function (li, i) {
+  var id = ROLE_IDS[i]; if (!id) return;
+  li.addEventListener('mouseenter', function () {
+    document.querySelectorAll('.roles li').forEach(function (x) { x.classList.toggle('lit', x === li); });
+    var kids = N.filter(function (n) { return n.exp === id && n.type !== 'person'; }).map(function (n) { return n.id; });
+    var EARLY = { te: 'w-fda', bi: 'w-hb', ch: 'w-liq' }; if (EARLY[id]) kids.push(EARLY[id]);
+    glowTo([id].concat(kids), byId[id].name);
   });
-  function go(i) { i = Math.max(0, Math.min(slides.length - 1, i)); track.scrollTo({ left: slides[i].offsetLeft - track.offsetLeft }); }
-  function update(i) {
-    current.slide = i;
-    Array.prototype.forEach.call(dots.children, function (d, j) { d.setAttribute('aria-current', j === i ? 'true' : 'false'); });
-    prev.disabled = i === 0; next.disabled = i === slides.length - 1; count.textContent = (i + 1) + ' / ' + slides.length;
-    if (current.section && current.section.id === 'work') setGlowFrom(current.section);
-  }
-  prev.addEventListener('click', function () { go(current.slide - 1); });
-  next.addEventListener('click', function () { go(current.slide + 1); });
-  track.addEventListener('keydown', function (e) { if (e.key === 'ArrowRight') { e.preventDefault(); go(current.slide + 1); } if (e.key === 'ArrowLeft') { e.preventDefault(); go(current.slide - 1); } });
-  var t; track.addEventListener('scroll', function () { clearTimeout(t); t = setTimeout(function () { update(Math.round(track.scrollLeft / track.clientWidth)); }, 60); });
-  update(0);
-})();
+});
 
 /* =========================================================
-   ASK: instant answers from structured data. No model, no network call.
+   ASK: instant answers from Indigo's written answer library (src/data/answers.js).
+   No model writes text. `also` phrases (weight 4) beat the broader single-word keys.
    ========================================================= */
-var INTENTS = [
-  { q: "Do you have leadership experience?", keys: [["lead",2],["leader",3],["leadership",3],["manage people",3],["managed",1],["team",1],["coach",2],["mentor",2],["hire",2],["hiring",2],["report",1],["supervis",2],["people",1]],
-    a: "Yes. As General Manager at Razor Sparrow I ran day-to-day operations across support, billing, renewals, product and compliance, hired a senior engineer, and managed and coached our customer support and success specialist for nearly two years. Earlier, as a restaurant general manager, I hired, trained and scheduled a team of 12 to 20.",
-    quote: "p-lauren", nodes: ["rs","p-lauren","s-lead","w-stab","bi"] },
-  { q: "How do you use AI?", keys: [["ai",3],["artificial",3],["llm",3],["claude",3],["gpt",2],["chatgpt",2],["agent",3],["agentic",3],["automat",2],["machine learning",2],["prompt",2],["cursor",2],["mcp",2]],
-    a: "I use AI where it actually helps and keep it away from what it shouldn't be trusted with. At Razor Sparrow I built an AI support-drafting system in Cursor with Claude models, tested it against replies the team had actually sent, and limited it to routine questions. It saved enough time that the support role didn't need to be rehired. I also prototype admin workflows with AI before engineering starts. At AutoPilotPR I design Claude-based agentic workflows where the model writes the words and code supplies the facts.",
-    nodes: ["w-ai","w-flow","w-portal","s-ai","ap"] },
-  { q: "What's your product management experience?", keys: [["product",2],["roadmap",3],["backlog",2],["user stor",3],["prioriti",2],["feature",2],["launch",2],["pm ",1],["discovery",2],["saas",1],["chrome",2],["extension",2]],
-    a: "I was the second hire and, for three years, the entire product function at Razor Sparrow, whose flagship Chrome extension GradeTransferer has about 70,000 users and a 4.8-star rating. I turned the founders' ideas and the support backlog into scoped, prioritized tickets, traced support volume to product defects, and then led the shift to growth with three new product launches.",
-    quote: "p-dev", nodes: ["rs","w-gt","w-launch","w-gs","w-ems","w-cc","w-backlog","s-req"] },
-  { q: "What operations work have you done?", keys: [["operation",3],["ops",3],["process",2],["sop",3],["sops",3],["support",2],["ticket",2],["billing",2],["renewal",2],["efficien",2],["system",1],["scale",1],["customer success",2]],
-    a: "I rebuilt Razor Sparrow's support so first response time fell from weeks to under 24 hours. I designed the ticket system, wrote the SOPs, built an account model that kept about 300 school district accounts accurate, and redesigned district pricing so renewals no longer needed re-quoting.",
-    nodes: ["w-stab","w-tickets","w-accounts","w-pricing","s-sys"] },
-  { q: "Have you managed projects or programs?", keys: [["project",3],["program",3],["agile",3],["scrum",3],["jira",3],["sprint",3],["deliver",2],["deadline",2],["timeline",2],["pmp",2],["kanban",2],["concurrent",2]],
-    a: "Yes. At Code Power I oversaw eight client projects across six industries, ran up to three at a time in Jira, and filled the business analyst, scrum master and project manager roles at times as each project needed. I owned requirements and backlog grooming and tested builds before release.",
-    quote: "p-chad", nodes: ["cp","w-connect","w-build","w-dc","w-mente","s-req","p-chad"] },
-  { q: "How do you work with clients and stakeholders?", keys: [["stakeholder",3],["client",3],["customer",1],["communicat",2],["executive",2],["cross-functional",3],["cross functional",3],["relationship",2],["align",2],["liaison",3]],
-    a: "I was the main liaison for seven software clients at Code Power, translating their goals into requirements developers could build. At Razor Sparrow I coordinated district purchasing and renewals across administrators, purchasing teams, accounts payable and our own staff, and worked directly with the co-founders to prioritize competing needs.",
-    quote: "p-mari", nodes: ["s-stake","w-connect","w-accounts","p-neil","p-mari"] },
-  { q: "How technical are you?", keys: [["technical",3],["code",2],["coding",3],["engineer",2],["developer",2],["sql",2],["database",3],["api",2],["javascript",3],["html",2],["schema",3],["bug",2],["architecture",2]],
-    a: "I'm not a software engineer, but I work comfortably close to the code. I co-designed an authorization system and the database schema behind it, built browser utilities with HTML, JavaScript and APIs to audit and update records our CRM couldn't handle, and worked with engineering on root-cause analysis of difficult bugs.",
-    quote: "p-rob", nodes: ["w-portal","p-dev","p-rob","s-sys"] },
-  { q: "Can you work remotely from Puerto Rico?", keys: [["remote",3],["puerto",3],["rico",3],["location",3],["where",2],["relocat",3],["visa",3],["sponsor",3],["time zone",3],["timezone",3],["eastern",2],["based",2],["live",1],["us citizen",3],["authoriz",2]],
-    a: "Yes. I live in Humacao, Puerto Rico, a US territory, so no visa or sponsorship is needed. I work on Atlantic Time, the same as US Eastern for most of the year, and I've worked remotely since 2021.",
-    nodes: ["me"] },
-  { q: "Do you have edtech experience?", keys: [["edtech",3],["education",3],["school",3],["k-12",3],["k12",3],["teacher",3],["district",3],["student",2],["learning",2]],
-    a: "Yes. Razor Sparrow builds tools for teachers and schools, and I managed purchasing and renewals for about 300 school districts. At Code Power I led two BUILD.org learning apps, Fam-Biz and Design Challenge, and worked on a custom learning management system for a tutoring business.",
-    nodes: ["rs","w-gt","w-accounts","w-build","w-dc","w-mundo"] },
-  { q: "Do you work with data?", keys: [["data",3],["analy",3],["metric",3],["kpi",3],["report",2],["churn",3],["dashboard",2],["excel",2],["spreadsheet",2]],
-    a: "Yes. At Razor Sparrow I analyzed billing and customer data on payment failures, renewals, churn reasons and tenure to give leadership clearer information for decisions, and I built browser tools to audit and export records our CRM couldn't handle.",
-    nodes: ["rs","s-cust","w-accounts"] },
-  { q: "What's your education?", keys: [["education",2],["degree",3],["college",3],["university",3],["school",1],["certif",3],["mba",3],["bachelor",3],["elon",3]],
-    a: "I have a BS in Environmental Studies from Elon University, and my senior capstone included formal project management training. I've also completed Claude 101 from Claude Academy.",
-    nodes: ["me"] },
-  { q: "What tools do you use?", keys: [["tool",3],["software",2],["stack",3],["jira",1],["taiga",3],["confluence",3],["airtable",3],["stripe",3],["gohighlevel",3],["crm",2]],
-    a: "Jira, Taiga, Confluence, Airtable, Stripe, GoHighLevel, REST APIs and webhooks, Claude, Claude Code, Cursor, MCP, HTML and JavaScript.",
-    nodes: ["s-req","s-ai","s-sys"] },
-  { q: "Are you available now?", keys: [["available",3],["availability",3],["start",2],["full-time",3],["full time",3],["notice",2],["looking",2],["open to",2]],
-    a: "Yes. I'm looking for a full-time remote role in product, program or operations management. My AutoPilotPR role is part-time.",
-    nodes: ["ap","me"] }
-];
-var SUGGEST = [0, 1, 2, 7, 4];
+var INTENTS = ANSWERS.map(function (a) {
+  return Object.assign({}, a, { keys: (a.keys || []).concat((a.also || []).map(function (p) { return [p, 4]; })) });
+});
 
 function norm(s) { return ' ' + s.toLowerCase().replace(/[^a-z0-9\- ]+/g, ' ').replace(/\s+/g, ' ') + ' '; }
 function answer(qText) {
@@ -370,32 +339,81 @@ function answer(qText) {
   out.ms = performance.now() - t0;
   return out;
 }
-var ansBox = document.getElementById('answer'), input = document.getElementById('askInput');
-function render(qText) {
-  if (!qText.trim()) { ansBox.hidden = true; return; }
-  var r = answer(qText), h = '<span class="q">' + esc(qText) + '</span>';
-  if (r.intent) {
-    h += '<p>' + esc(r.intent.a) + '</p>';
-    if (r.intent.quote) { var p = byId[r.intent.quote]; h += '<q>' + esc(p.quote) + ' — ' + esc(p.name) + '</q>'; }
-    h += '<div class="ev"><span>EVIDENCE · SHOW ON MAP</span>' + r.intent.nodes.filter(function (id) { return id !== 'me'; }).map(function (id) { return chipBtn(byId[id]); }).join('') + '</div>';
-  } else if (r.related && r.related.length) {
-    h += '<p>I don’t have a written answer for that yet. These parts of my work look related:</p><div class="ev">' + r.related.map(chipBtn).join('') + '</div>';
-  } else {
-    h += '<p>I don’t have a written answer for that yet. Try one of the suggested questions, or ask me directly. My contact details are at the bottom of the page.</p>';
-  }
-  h += '<span class="speed">Answered in ' + (r.ms < 1 ? 'under 1' : r.ms.toFixed(1)) + ' ms from my mapped experience. No AI model involved.</span>';
-  ansBox.innerHTML = h; ansBox.hidden = false;
+/* ---------------------------------------------------------
+   ASK THE MAP (Constellation). The question lives in a small copy of the map:
+   matching dots brighten as you type, and an answer traces a path to its sources.
+   Answers are only Indigo's written text. Optional remote matcher: set data-endpoint
+   on #ask; it receives POST {"q": "..."} and returns {"index": n} (an INTENTS index)
+   or {"index": null}. Without it, unmatched questions go straight to the fallback.
+   --------------------------------------------------------- */
+var askSec = document.getElementById('ask'), ansBox = document.getElementById('answer'), input = document.getElementById('askInput'),
+    live = document.getElementById('askLive'), ENDPOINT = askSec.getAttribute('data-endpoint') || '';
+function askPreview(ids) { if (state.mode !== 'read') return; state.pre = ids; paint(); }
+var traceTimers = [];
+function askTrace(ids, label) {
+  traceTimers.forEach(clearTimeout); traceTimers = [];
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  glowTo(['me'], label);
+  ids.forEach(function (id, i) { traceTimers.push(setTimeout(function () { state.glow = state.glow.concat([id]); paint(); }, reduce ? 0 : 110 * (i + 1))); });
+}
+var sparkG = null;
+function askPulse(on) {
+  if (sparkG) { sparkG.remove(); sparkG = null; }
+  if (!on || !rootG || !POS.me) return;
+  sparkG = rootG.select('.drift').append('g');
+  ['ap', 'rs', 'cp', 'te', 'bi'].forEach(function (id, i) {
+    var a = POS.me, b = POS[id]; if (!b) return;
+    sparkG.append('circle').attr('class', 'spark').attr('r', 3.5)
+      .append('animateMotion').attr('dur', '0.9s').attr('repeatCount', 'indefinite').attr('begin', (i * 0.12) + 's').attr('path', 'M' + a.x + ',' + a.y + ' L' + b.x + ',' + b.y);
+  });
+}
+function suggestHtml(list) { return '<div class="suggest">' + list.map(function (i) { return '<button type="button" data-q="' + i + '">' + esc(INTENTS[i].q) + '</button>'; }).join('') + '</div>'; }
+function showAnswer(qText, it, how) {
+  /* show which written question this answers, so a loose match is never mistaken for a direct one */
+  var same = norm(qText).trim() === norm(it.q).trim();
+  var h = (same ? '' : '<span class="q">You asked: ' + esc(qText) + '</span>') + '<h3>' + esc(it.q) + '</h3><p>' + esc(it.a) + '</p>';
+  if (it.quote) { var p = byId[it.quote]; h += '<q>' + esc(p.quote) + ' — ' + esc(p.name) + '</q>'; }
+  h += '<div class="ev"><span>SOURCES · OPEN ON MAP</span>' + it.nodes.filter(function (id) { return id !== 'me'; }).map(function (id) { return chipBtn(byId[id]); }).join('') + '</div>';
+  h += '<span class="speed">' + (how === 'instant' ? 'Instant' : 'Matched') + ' · my written answer</span>';
+  finish(h); askTrace(it.nodes.filter(function (id) { return id !== 'me'; }), 'Answer sources');
+  live.textContent = 'Its sources are lit on the map.';
+}
+function showFallback(qText, related) {
+  var h = '<span class="q">' + esc(qText) + '</span><p>I haven’t written about that yet. Try one of these, or <a href="https://www.linkedin.com/in/indigogrady">ask me on LinkedIn</a>.</p>' + suggestHtml(SUGGEST.slice(0, 3));
+  if (related && related.length) h += '<div class="ev"><span>CLOSEST PARTS OF MY WORK</span>' + related.map(chipBtn).join('') + '</div>';
+  finish(h); askTrace((related || []).map(function (n) { return n.id; }), related && related.length ? 'Closest parts of my work' : 'No written answer yet');
+  live.textContent = '';
+}
+function finish(h) {
+  ansBox.innerHTML = h; ansBox.hidden = false; askPulse(false); askSec.classList.remove('matching');
   ansBox.querySelectorAll('[data-id]').forEach(function (b) { b.addEventListener('click', function () { setMode('explore', b.getAttribute('data-id')); }); });
-  if (r.intent) { state.glow = r.intent.nodes; paint(); }
+}
+var askSeq = 0;
+function render(qText) {
+  qText = qText.trim(); if (!qText) { ansBox.hidden = true; return; }
+  var seq = ++askSeq, r = answer(qText);
+  if (r.intent) return showAnswer(qText, r.intent, 'instant');
+  if (!ENDPOINT || !window.fetch) return showFallback(qText, r.related);
+  askSec.classList.add('matching'); glowTo([], 'Matching…'); askPulse(true);
+  ansBox.hidden = false; ansBox.innerHTML = '<span class="q">' + esc(qText) + '</span><span class="speed matching">Matching your question to my written answers</span>';
+  live.textContent = 'Matching your question…';
+  var ctl = 'AbortController' in window ? new AbortController() : null, to = setTimeout(function () { if (ctl) ctl.abort(); }, 2500);
+  fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: qText }), signal: ctl ? ctl.signal : undefined })
+    .then(function (res) { return res.ok ? res.json() : null; })
+    .catch(function () { return null; })
+    .then(function (j) { clearTimeout(to); if (seq !== askSeq) return; var it = j && typeof j.index === 'number' ? INTENTS[j.index] : null; if (it) showAnswer(qText, it, 'matched'); else showFallback(qText, r.related); });
 }
 document.getElementById('askForm').addEventListener('submit', function (e) { e.preventDefault(); render(input.value); });
-var deb; input.addEventListener('input', function () { clearTimeout(deb); deb = setTimeout(function () { if (input.value.trim().length > 6) render(input.value); }, 250); });
-var sug = document.getElementById('suggest');
-SUGGEST.forEach(function (i) {
-  var b = document.createElement('button'); b.type = 'button'; b.textContent = INTENTS[i].q;
-  b.addEventListener('click', function () { input.value = INTENTS[i].q; render(INTENTS[i].q); });
-  sug.appendChild(b);
+var deb; input.addEventListener('input', function () {
+  clearTimeout(deb); deb = setTimeout(function () {
+    var v = input.value.trim();
+    if (!v) { askPreview([]); live.textContent = 'Matching dots brighten as you type.'; return; }
+    var r = answer(v), ids = r.intent ? r.intent.nodes : (r.related || []).map(function (n) { return n.id; });
+    askPreview(ids); live.innerHTML = ids.length ? '<b>' + ids.length + '</b> parts of my work look related. Press Ask.' : 'Press Ask to see if I’ve written about that.';
+  }, 120);
 });
+askSec.addEventListener('click', function (e) { var b = e.target.closest('[data-q]'); if (b) { var it = INTENTS[+b.getAttribute('data-q')]; input.value = it.q; render(it.q); } });
+document.getElementById('suggest').innerHTML = suggestHtml(SUGGEST).replace(/^<div class="suggest">|<\/div>$/g, '');
 
 /* email, assembled in the browser so scrapers miss it */
 (function () {

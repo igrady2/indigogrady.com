@@ -1,6 +1,6 @@
 # indigogrady.com
 
-Personal site for Indigo Grady: a one-page portfolio with a "Read" view, an "Explore the map" network of roles, projects, people and skills, and an instant, rule-based "Ask about my experience" box (no AI model at runtime).
+Personal site for Indigo Grady: a one-page portfolio with a "Read" view, an "Explore the map" network of roles, projects, people and skills, and an "Ask about my experience" box that only ever shows answers Indigo wrote.
 
 Built with [Astro](https://astro.build) and [D3](https://d3js.org).
 
@@ -15,9 +15,19 @@ npm run build    # static site in dist/ (needs Node 22.12 or newer)
 ## Where things live
 
 - `src/pages/index.astro`: page markup
-- `src/scripts/site.js`: map data (nodes, links, Ask answers) and all interactions
+- `src/scripts/site.js`: map data (nodes, links) and all interactions
+- `src/data/answers.js`: the Ask answer library (Indigo's written answers)
+- `functions/api/ask.js`: Cloudflare Pages Function that asks Jev which written answer fits a question
 - `src/styles/site.css`: styles
 - `public/`: images and favicon
+
+## How Ask works
+
+1. In the browser, keyword matching against `src/data/answers.js` answers common questions instantly.
+2. Anything else is posted to `/api/ask`. That function sends the question and the list of answers to [Jev](https://docs.typesafe.ai) (TypeSafe's System One model). Jev returns which answer fits, or "none". It never writes text, so the page only ever shows Indigo's own words.
+3. If Jev isn't confident (top probability below 0.5), or the function isn't set up, the box says "I haven't written about that yet" and suggests questions.
+
+To turn Jev on in Cloudflare Pages, add an encrypted environment variable `TYPESAFE_API_KEY` (Settings → Variables and Secrets) and redeploy. Optional: `ASK_MIN_P` changes the confidence bar (default `0.5`). Locally, `npm run dev` has no `/api/ask`, so unmatched questions go straight to the fallback.
 
 ## Next
 
