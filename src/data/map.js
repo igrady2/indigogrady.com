@@ -107,7 +107,6 @@ N.push(
   { id: 'w-segment', type: 'work', exp: 'rs', name: 'Audience segmentation and messaging', sub: 'Razor Sparrow', body: 'Defined audience categories and wrote teacher-focused service descriptions and AI drafting guidance so messages fit who they were going to.' },
   /* personal projects */
   { id: 'w-site', type: 'work', exp: 'own', name: 'indigogrady.com', sub: 'Personal project · 2026', body: 'This site. Iterated through GitHub pull requests and Cloudflare Pages: the project map, the Ask box and its answer library, and the particle intro.' },
-  { id: 'w-coqui', type: 'work', exp: 'own', name: 'QueCoqui', sub: 'Personal venture · setup and prototype', body: 'A local-business automation venture. I developed the brand and set up HighLevel and WhatsApp.' },
 
   /* skills */
   { id: 's-auto', type: 'skill', name: 'Workflow automation', sub: 'Skill', body: 'Includes CRM automations, reply-driven stage changes and data synchronization.' },
@@ -133,14 +132,13 @@ N.push(
   { id: 't-stripe', type: 'skill', name: 'Stripe', sub: 'Tool' },
   { id: 't-gh', type: 'skill', name: 'GitHub', sub: 'Tool' },
   { id: 't-cf', type: 'skill', name: 'Cloudflare Pages', sub: 'Tool' },
-  { id: 't-wa', type: 'skill', name: 'WhatsApp', sub: 'Tool' },
   { id: 't-gc', type: 'skill', name: 'Google Classroom', sub: 'Platform', body: 'The platform Razor Sparrow’s extensions run in.' },
   { id: 't-cws', type: 'skill', name: 'Chrome Web Store', sub: 'Platform', body: 'Where Razor Sparrow’s extensions are published.' }
 );
 
 L.push(
   ['rs','w-export'],['rs','w-audit'],['rs','w-renew'],['rs','w-purch'],['rs','w-chirpy'],['rs','w-dash'],['rs','w-churn'],['rs','w-segment'],
-  ['me','w-site'],['me','w-coqui'],
+  ['me','w-site'],
   ['w-dash','w-gt'],['w-chirpy','w-ai'],['w-renew','w-pricing'],['w-purch','w-accounts'],['w-export','w-audit'],
   /* existing projects to new skills and tools */
   ['t-ghl','w-tickets'],['s-auto','w-tickets'],
@@ -159,7 +157,7 @@ L.push(
   ['t-ga4','w-churn'],['t-bq','w-churn'],['t-stripe','w-churn'],['t-ghl','w-churn'],['s-analytics','w-churn'],
   ['t-ghl','w-segment'],['s-comms','w-segment'],['s-launch','w-segment'],
   ['t-gh','w-site'],['t-cf','w-site'],['s-ux','w-site'],['s-ai','w-site'],['s-proto','w-site'],
-  ['t-ghl','w-coqui'],['t-wa','w-coqui'],['s-brand','w-coqui'],['s-crm','w-coqui'],['s-sys','w-coqui']
+  ['s-brand','w-site']
 );
 
 /* Full recommendation letters, shown in the map panel when a person is clicked.
