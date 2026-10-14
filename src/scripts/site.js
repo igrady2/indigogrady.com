@@ -97,8 +97,14 @@ var hasD3 = typeof d3 !== 'undefined';
 var sky = document.getElementById('sky');
 var state = { mode: 'read', exp: 'all', types: { role: true, work: true, person: true, skill: true }, focus: null, glow: [] };
 var nodeEls = {}, edgeEls = [], zoomer, rootG, POS = {};
+function sideMap() { return window.innerWidth >= 900; }
+function syncView() { var r = sky.getBoundingClientRect(); sky.setAttribute('viewBox', '0 0 ' + Math.round(r.width) + ' ' + Math.round(r.height)); }
 function fitArea() {
   var W = window.innerWidth, H = window.innerHeight;
+  if (state.mode === 'read') {
+    if (sideMap()) return { x0: W * 0.56 + 28, y0: 64, x1: W - 28, y1: H - 56 };
+    return { x0: 14, y0: 58, x1: W - 14, y1: sky.getBoundingClientRect().height - 18 };
+  }
   if (W <= 760) return { x0: 16, y0: 200, x1: W - 16, y1: H * 0.56 };
   return { x0: 24, y0: 120, x1: W - 22 * 16 - 56, y1: H - 36 };
 }
@@ -109,9 +115,11 @@ function fit(ids) {
   var pad = 70, minx = Math.min.apply(null, xs) - pad, maxx = Math.max.apply(null, xs) + pad, miny = Math.min.apply(null, ys) - pad / 2, maxy = Math.max.apply(null, ys) + pad;
   var a = fitArea(), k = Math.min((a.x1 - a.x0) / (maxx - minx), (a.y1 - a.y0) / (maxy - miny), 1.8);
   k = Math.max(0.35, k);
+  /* in the side panel the map is zoomed out to fit; keep dots and labels at their normal size */
+  sky.style.setProperty('--inv', state.mode === 'read' ? String(Math.min(sideMap() ? 2.4 : 1.25, Math.max(1, 1 / k))) : '1');
   var tx = a.x0 + ((a.x1 - a.x0) - (maxx - minx) * k) / 2 - minx * k, ty = a.y0 + ((a.y1 - a.y0) - (maxy - miny) * k) / 2 - miny * k;
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  d3.select(sky).transition().duration(reduce ? 0 : 650).call(zoomer.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
+  d3.select(sky).transition().duration(reduce || state.mode === 'read' ? 0 : 650).call(zoomer.transform, d3.zoomIdentity.translate(tx, ty).scale(k));
 }
 function visibleIds() { return N.filter(function (n) { return visible(n); }).map(function (n) { return n.id; }); }
 function focusIds(id) { return [id].concat(Array.from(nbr[id])); }
@@ -136,9 +144,9 @@ function layout(W, H) {
 function buildSky() {
   if (!hasD3) return;
   var W = window.innerWidth, H = window.innerHeight;
-  sky.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
   sky.innerHTML = '';
-  var L2 = layout(W, H); POS = L2.pos;
+  /* lay the network out for the space it lives in most of the time: the side panel, or a phone band */
+  var L2 = sideMap() ? layout(W * 0.44, H) : layout(W, Math.max(420, W * 0.95)); POS = L2.pos;
   var svg = d3.select(sky);
   rootG = svg.append('g');
   var drift = rootG.append('g').attr('class', 'drift');
@@ -164,7 +172,6 @@ function buildSky() {
     .on('zoom', function (ev) { rootG.attr('transform', ev.transform); });
   svg.call(zoomer);
   applyMode(); paint();
-  if (state.mode === 'explore') fit(state.focus ? focusIds(state.focus) : visibleIds());
 }
 
 function inExp(n) {
@@ -176,11 +183,13 @@ function visible(n) { return state.mode === 'read' || n.type === 'me' || (state.
 
 function paint() {
   var f = state.mode === 'explore' ? state.focus : null;
-  var glow = state.mode === 'read' ? new Set(state.glow) : new Set();
+  var glow = state.mode === 'read' ? new Set(state.glow) : new Set(), pre = state.mode === 'read' ? new Set(state.pre || []) : new Set();
+  document.body.classList.toggle('lit', glow.size + pre.size > 0 && !(glow.size >= 5 && glow.has('me') && state.glowAll));
   N.forEach(function (n) {
     var el = nodeEls[n.id]; if (!el) return;
     el.style.display = visible(n) ? '' : 'none';
     el.classList.toggle('glow', glow.has(n.id));
+    el.classList.toggle('pre', pre.has(n.id) && !glow.has(n.id));
     el.classList.toggle('focus', f === n.id);
     el.classList.toggle('dim', !!f && n.id !== f && !nbr[f].has(n.id));
     if (state.mode === 'explore') { el.setAttribute('tabindex', '0'); el.setAttribute('role', 'button'); el.setAttribute('aria-label', TYPES[n.type].label + ': ' + n.name); }
@@ -206,7 +215,8 @@ function applyMode() {
   xui.setAttribute('aria-hidden', String(state.mode !== 'explore'));
   page.setAttribute('aria-hidden', String(state.mode === 'explore'));
   if ('inert' in page) page.inert = state.mode === 'explore';
-  if (state.mode === 'read' && zoomer) d3.select(sky).call(zoomer.transform, d3.zoomIdentity);
+  syncView();
+  if (state.mode === 'read') fit(N.map(function (n) { return n.id; }));
 }
 document.querySelectorAll("[data-open]").forEach(function (b) { b.addEventListener("click", function () { setMode("explore", b.getAttribute("data-open")); }); });
 function setMode(m, focusId) {
@@ -269,42 +279,35 @@ function showPanel(n) {
 /* =========================================================
    READ MODE: the section you're reading lights up its part of the sky
    ========================================================= */
-var sections = Array.prototype.slice.call(document.querySelectorAll('[data-nodes]')).filter(function (s) { return !s.classList.contains('case'); });
-var current = { section: null, slide: 0 };
+var mapNow = document.getElementById('mapNow');
+function glowTo(ids, label, all) { state.glow = ids; state.glowAll = !!all; state.pre = []; if (label) mapNow.textContent = label; paint(); }
 function setGlowFrom(el) {
   var ids = (el.getAttribute('data-nodes') || '').split(/\s+/).filter(Boolean);
-  if (el.id === 'work') { var c = document.querySelectorAll('.case')[current.slide]; ids = (c.getAttribute('data-nodes') || '').split(/\s+/); }
-  state.glow = ids; paint();
+  if (!ids.length) return;
+  document.querySelectorAll('.case.lit').forEach(function (c) { c.classList.toggle('lit', c === el); });
+  glowTo(ids, el.getAttribute('data-label') || '', el.id === 'top');
 }
+var sections = Array.prototype.slice.call(document.querySelectorAll('[data-nodes]'));
 if ('IntersectionObserver' in window) {
   var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) { if (en.isIntersecting) { current.section = en.target; setGlowFrom(en.target); } });
+    entries.forEach(function (en) { if (en.isIntersecting) setGlowFrom(en.target); });
   }, { rootMargin: '-45% 0px -45% 0px' });
-  sections.concat([document.getElementById('work')]).forEach(function (s) { io.observe(s); });
+  sections.forEach(function (s) { io.observe(s); });
 }
-
-/* carousel */
-(function () {
-  var track = document.getElementById('cases'), slides = Array.prototype.slice.call(track.children);
-  var dots = document.getElementById('dots'), prev = document.getElementById('prev'), next = document.getElementById('next'), count = document.getElementById('count');
-  slides.forEach(function (s, i) {
-    s.setAttribute('aria-roledescription', 'slide'); s.setAttribute('aria-label', (i + 1) + ' of ' + slides.length);
-    var d = document.createElement('button'); d.type = 'button'; d.className = 'dot'; d.setAttribute('aria-label', 'Show case study ' + (i + 1));
-    d.addEventListener('click', function () { go(i); }); dots.appendChild(d);
+/* hovering or focusing a case or role lights its part of the map */
+document.querySelectorAll('.case').forEach(function (c) {
+  ['mouseenter', 'focusin'].forEach(function (ev) { c.addEventListener(ev, function () { setGlowFrom(c); }); });
+});
+var ROLE_IDS = ['ap', 'rs', 'cp', 'te', 'bi'];
+document.querySelectorAll('.roles li').forEach(function (li, i) {
+  var id = ROLE_IDS[i]; if (!id) return;
+  li.addEventListener('mouseenter', function () {
+    document.querySelectorAll('.roles li').forEach(function (x) { x.classList.toggle('lit', x === li); });
+    var kids = N.filter(function (n) { return n.exp === id && n.type !== 'person'; }).map(function (n) { return n.id; });
+    if (id === 'te') kids.push('w-fda');
+    glowTo([id].concat(kids), byId[id].name);
   });
-  function go(i) { i = Math.max(0, Math.min(slides.length - 1, i)); track.scrollTo({ left: slides[i].offsetLeft - track.offsetLeft }); }
-  function update(i) {
-    current.slide = i;
-    Array.prototype.forEach.call(dots.children, function (d, j) { d.setAttribute('aria-current', j === i ? 'true' : 'false'); });
-    prev.disabled = i === 0; next.disabled = i === slides.length - 1; count.textContent = (i + 1) + ' / ' + slides.length;
-    if (current.section && current.section.id === 'work') setGlowFrom(current.section);
-  }
-  prev.addEventListener('click', function () { go(current.slide - 1); });
-  next.addEventListener('click', function () { go(current.slide + 1); });
-  track.addEventListener('keydown', function (e) { if (e.key === 'ArrowRight') { e.preventDefault(); go(current.slide + 1); } if (e.key === 'ArrowLeft') { e.preventDefault(); go(current.slide - 1); } });
-  var t; track.addEventListener('scroll', function () { clearTimeout(t); t = setTimeout(function () { update(Math.round(track.scrollLeft / track.clientWidth)); }, 60); });
-  update(0);
-})();
+});
 
 /* =========================================================
    ASK: instant answers from structured data. No model, no network call.
@@ -370,32 +373,81 @@ function answer(qText) {
   out.ms = performance.now() - t0;
   return out;
 }
-var ansBox = document.getElementById('answer'), input = document.getElementById('askInput');
-function render(qText) {
-  if (!qText.trim()) { ansBox.hidden = true; return; }
-  var r = answer(qText), h = '<span class="q">' + esc(qText) + '</span>';
-  if (r.intent) {
-    h += '<p>' + esc(r.intent.a) + '</p>';
-    if (r.intent.quote) { var p = byId[r.intent.quote]; h += '<q>' + esc(p.quote) + ' — ' + esc(p.name) + '</q>'; }
-    h += '<div class="ev"><span>EVIDENCE · SHOW ON MAP</span>' + r.intent.nodes.filter(function (id) { return id !== 'me'; }).map(function (id) { return chipBtn(byId[id]); }).join('') + '</div>';
-  } else if (r.related && r.related.length) {
-    h += '<p>I don’t have a written answer for that yet. These parts of my work look related:</p><div class="ev">' + r.related.map(chipBtn).join('') + '</div>';
-  } else {
-    h += '<p>I don’t have a written answer for that yet. Try one of the suggested questions, or ask me directly. My contact details are at the bottom of the page.</p>';
-  }
-  h += '<span class="speed">Answered in ' + (r.ms < 1 ? 'under 1' : r.ms.toFixed(1)) + ' ms from my mapped experience. No AI model involved.</span>';
-  ansBox.innerHTML = h; ansBox.hidden = false;
+/* ---------------------------------------------------------
+   ASK THE MAP (Constellation). The question lives in a small copy of the map:
+   matching dots brighten as you type, and an answer traces a path to its sources.
+   Answers are only Indigo's written text. Optional remote matcher: set data-endpoint
+   on #ask; it receives POST {"q": "..."} and returns {"index": n} (an INTENTS index)
+   or {"index": null}. Without it, unmatched questions go straight to the fallback.
+   --------------------------------------------------------- */
+var askSec = document.getElementById('ask'), ansBox = document.getElementById('answer'), input = document.getElementById('askInput'),
+    live = document.getElementById('askLive'), ENDPOINT = askSec.getAttribute('data-endpoint') || '';
+function askPreview(ids) { if (state.mode !== 'read') return; state.pre = ids; paint(); }
+var traceTimers = [];
+function askTrace(ids, label) {
+  traceTimers.forEach(clearTimeout); traceTimers = [];
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  glowTo(['me'], label);
+  ids.forEach(function (id, i) { traceTimers.push(setTimeout(function () { state.glow = state.glow.concat([id]); paint(); }, reduce ? 0 : 110 * (i + 1))); });
+}
+var sparkG = null;
+function askPulse(on) {
+  if (sparkG) { sparkG.remove(); sparkG = null; }
+  if (!on || !rootG || !POS.me) return;
+  sparkG = rootG.select('.drift').append('g');
+  ['ap', 'rs', 'cp', 'te', 'bi'].forEach(function (id, i) {
+    var a = POS.me, b = POS[id]; if (!b) return;
+    sparkG.append('circle').attr('class', 'spark').attr('r', 3.5)
+      .append('animateMotion').attr('dur', '0.9s').attr('repeatCount', 'indefinite').attr('begin', (i * 0.12) + 's').attr('path', 'M' + a.x + ',' + a.y + ' L' + b.x + ',' + b.y);
+  });
+}
+function suggestHtml(list) { return '<div class="suggest">' + list.map(function (i) { return '<button type="button" data-q="' + i + '">' + esc(INTENTS[i].q) + '</button>'; }).join('') + '</div>'; }
+function showAnswer(qText, it, how) {
+  /* show which written question this answers, so a loose match is never mistaken for a direct one */
+  var same = norm(qText).trim() === norm(it.q).trim();
+  var h = (same ? '' : '<span class="q">You asked: ' + esc(qText) + '</span>') + '<h3>' + esc(it.q) + '</h3><p>' + esc(it.a) + '</p>';
+  if (it.quote) { var p = byId[it.quote]; h += '<q>' + esc(p.quote) + ' — ' + esc(p.name) + '</q>'; }
+  h += '<div class="ev"><span>SOURCES · OPEN ON MAP</span>' + it.nodes.filter(function (id) { return id !== 'me'; }).map(function (id) { return chipBtn(byId[id]); }).join('') + '</div>';
+  h += '<span class="speed">' + (how === 'instant' ? 'Instant' : 'Matched') + ' · my written answer</span>';
+  finish(h); askTrace(it.nodes.filter(function (id) { return id !== 'me'; }), 'Answer sources');
+  live.textContent = 'Its sources are lit on the map.';
+}
+function showFallback(qText, related) {
+  var h = '<span class="q">' + esc(qText) + '</span><p>I haven’t written about that yet. Try one of these, or <a href="https://www.linkedin.com/in/indigogrady">ask me on LinkedIn</a>.</p>' + suggestHtml(SUGGEST.slice(0, 3));
+  if (related && related.length) h += '<div class="ev"><span>CLOSEST PARTS OF MY WORK</span>' + related.map(chipBtn).join('') + '</div>';
+  finish(h); askTrace((related || []).map(function (n) { return n.id; }), related && related.length ? 'Closest parts of my work' : 'No written answer yet');
+  live.textContent = '';
+}
+function finish(h) {
+  ansBox.innerHTML = h; ansBox.hidden = false; askPulse(false); askSec.classList.remove('matching');
   ansBox.querySelectorAll('[data-id]').forEach(function (b) { b.addEventListener('click', function () { setMode('explore', b.getAttribute('data-id')); }); });
-  if (r.intent) { state.glow = r.intent.nodes; paint(); }
+}
+var askSeq = 0;
+function render(qText) {
+  qText = qText.trim(); if (!qText) { ansBox.hidden = true; return; }
+  var seq = ++askSeq, r = answer(qText);
+  if (r.intent) return showAnswer(qText, r.intent, 'instant');
+  if (!ENDPOINT || !window.fetch) return showFallback(qText, r.related);
+  askSec.classList.add('matching'); glowTo([], 'Matching…'); askPulse(true);
+  ansBox.hidden = false; ansBox.innerHTML = '<span class="q">' + esc(qText) + '</span><span class="speed matching">Matching your question to my written answers</span>';
+  live.textContent = 'Matching your question…';
+  var ctl = 'AbortController' in window ? new AbortController() : null, to = setTimeout(function () { if (ctl) ctl.abort(); }, 2500);
+  fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: qText }), signal: ctl ? ctl.signal : undefined })
+    .then(function (res) { return res.ok ? res.json() : null; })
+    .catch(function () { return null; })
+    .then(function (j) { clearTimeout(to); if (seq !== askSeq) return; var it = j && typeof j.index === 'number' ? INTENTS[j.index] : null; if (it) showAnswer(qText, it, 'matched'); else showFallback(qText, r.related); });
 }
 document.getElementById('askForm').addEventListener('submit', function (e) { e.preventDefault(); render(input.value); });
-var deb; input.addEventListener('input', function () { clearTimeout(deb); deb = setTimeout(function () { if (input.value.trim().length > 6) render(input.value); }, 250); });
-var sug = document.getElementById('suggest');
-SUGGEST.forEach(function (i) {
-  var b = document.createElement('button'); b.type = 'button'; b.textContent = INTENTS[i].q;
-  b.addEventListener('click', function () { input.value = INTENTS[i].q; render(INTENTS[i].q); });
-  sug.appendChild(b);
+var deb; input.addEventListener('input', function () {
+  clearTimeout(deb); deb = setTimeout(function () {
+    var v = input.value.trim();
+    if (!v) { askPreview([]); live.textContent = 'Matching dots brighten as you type.'; return; }
+    var r = answer(v), ids = r.intent ? r.intent.nodes : (r.related || []).map(function (n) { return n.id; });
+    askPreview(ids); live.innerHTML = ids.length ? '<b>' + ids.length + '</b> parts of my work look related. Press Ask.' : 'Press Ask to see if I’ve written about that.';
+  }, 120);
 });
+askSec.addEventListener('click', function (e) { var b = e.target.closest('[data-q]'); if (b) { var it = INTENTS[+b.getAttribute('data-q')]; input.value = it.q; render(it.q); } });
+document.getElementById('suggest').innerHTML = suggestHtml(SUGGEST).replace(/^<div class="suggest">|<\/div>$/g, '');
 
 /* email, assembled in the browser so scrapers miss it */
 (function () {
