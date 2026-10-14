@@ -309,8 +309,9 @@ body.read .edge.glow { stroke: var(--work); opacity: 0.7; }
 /* hero headline: one deliberate line each, sized to fit the column so lines never re-wrap */
 .hero { container-type: inline-size; }
 .hero h1.headline .ln { display: block; }
-.hero h1.headline .ln:not(.accent) { background: none; -webkit-background-clip: initial; background-clip: initial; color: inherit; }
+.hero h1.headline .ln { background: none; -webkit-background-clip: initial; background-clip: initial; color: inherit; }
 @media (min-width: 420px) {
-  .hero h1.headline { font-size: min(4.5rem, 8cqi); }
+  .hero h1.headline { font-size: min(4.5rem, 9.6cqi); }
   .hero h1.headline .ln { white-space: nowrap; }
+  .hero h1.headline .accent { white-space: nowrap; }
 }
