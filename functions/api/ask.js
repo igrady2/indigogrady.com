@@ -5,7 +5,7 @@
    Jev (TypeSafe's System One model) picks which of Indigo's written answers
    fits the question, or "none". It never writes text: the page shows the
    chosen answer word for word. Needs the TYPESAFE_API_KEY secret; without
-   it every question falls back to "I haven't written about that yet".
+   it unmatched questions get "Did you mean" or the LinkedIn invite.
    ========================================================= */
 import { ANSWERS } from '../../src/data/answers.js';
 import { PHRASINGS } from '../../src/data/phrasings.js';

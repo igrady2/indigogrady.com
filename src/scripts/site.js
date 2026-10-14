@@ -309,9 +309,9 @@ function showNone(qText, r, alts) {
   if (alts.length) showMaybe(qText, alts, r.related); else showFallback(qText, r.related);
 }
 function showFallback(qText, related) {
-  var h = '<span class="q">' + esc(qText) + '</span><p>I haven’t written about that yet. Try one of these, or <a href="https://www.linkedin.com/in/indigogrady">ask me on LinkedIn</a>.</p>' + suggestHtml(SUGGEST.slice(0, 3));
+  var h = '<span class="q">' + esc(qText) + '</span><p>That’s a great one to ask me directly.</p><div class="row"><a class="btn primary" href="https://www.linkedin.com/in/indigogrady" target="_blank" rel="noopener">Ask me on LinkedIn ↗</a></div><p class="fine">Or try one of these:</p>' + suggestHtml(SUGGEST.slice(0, 3));
   if (related && related.length) h += '<div class="ev"><span>CLOSEST PARTS OF MY WORK</span>' + related.map(chipBtn).join('') + '</div>';
-  finish(h); askTrace((related || []).map(function (n) { return n.id; }), related && related.length ? 'Closest parts of my work' : 'No written answer yet');
+  finish(h); askTrace((related || []).map(function (n) { return n.id; }), related && related.length ? 'Closest parts of my work' : 'Ask me on LinkedIn');
   live.textContent = '';
 }
 function finish(h) {
