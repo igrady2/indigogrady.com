@@ -10,7 +10,7 @@ import { fact } from '../src/data/facts.js';
 import { pick } from '../functions/api/ask.js';
 
 const fi = process.argv.indexOf('--file'), FILE = fi > 0 ? new URL('../' + process.argv[fi + 1], import.meta.url) : new URL('../tests/ask-questions.tsv', import.meta.url);
-const rows = fs.readFileSync(FILE, 'utf8').trim().split('\n').map((l) => { const [q, e] = l.split('\t'); return { q, expect: e.split('|') }; });
+const rows = fs.readFileSync(FILE, 'utf8').trim().split(/\r?\n/).map((l) => { const [q, e] = l.split('\t'); return { q, expect: e.trim().split('|') }; });
 const ids = new Set(ANSWERS.map((a) => a.id));
 rows.forEach((r) => r.expect.forEach((e) => { if (e !== 'none' && !e.startsWith('fact:') && !ids.has(e)) throw new Error('unknown id ' + e); }));
 const JEV = process.argv.includes('--jev');
