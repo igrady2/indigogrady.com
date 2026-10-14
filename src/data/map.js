@@ -45,7 +45,7 @@ export const N = [
   { id: "w-hb", type: "work", exp: "early", name: "Employee handbook and training manual", sub: "Bistro 360", body: "Wrote the restaurant's new handbook and training manual from scratch, including sustainability practices that cut single-use items and food waste." },
   { id: "w-liq", type: "work", exp: "early", name: "First liquor program", sub: "Cheesetique", body: "Planned and ran the store's first liquor program from concept to launch: the craft cocktail list, distributor ordering, and cost analysis and tracking." },
   { id: "p-lauren", type: "person", exp: "rs", name: "Lauren Samaras", sub: "Customer Support and Success Specialist · reported to Indigo", quote: "Indigo is an exceptional leader who consistently balances the bigger picture with the operational details needed to bring ideas to life.", lead: true },
-  { id: "p-dev", type: "person", exp: "rs", name: "Lead Software Developer", sub: "Razor Sparrow · engineering partner", quote: "Indigo excelled at breaking down complex or loosely defined requests into clear user stories with acceptance criteria, effort estimates, and priority rankings." },
+  { id: "p-dev", type: "person", exp: "rs", name: "Andrew Randall", sub: "Lead Software Developer, Razor Sparrow · engineering partner", quote: "Indigo excelled at breaking down complex or loosely defined requests into clear user stories with acceptance criteria, effort estimates, and priority rankings." },
   { id: "p-neil", type: "person", exp: "cp", name: "Neil Myers", sub: "President, Connect Marketing · client", quote: "He frequently provided insightful suggestions, either simplifying our specifications or prompting us to consider the broader, long-term implications of our requests." },
   { id: "p-rob", type: "person", exp: "cp", name: "Roberto Del Valle", sub: "Senior Software Engineer · teammate at Code Power", quote: "Even when faced with technical aspects that may be unfamiliar, Indigo proactively seeks to understand them, providing valuable insights and facilitating effective communication between developers and the rest of the team." },
   { id: "p-chad", type: "person", exp: "cp", name: "J Chad McCully", sub: "Engineering Manager, my manager on BUILD", quote: "Indigo Owns it." },
@@ -161,3 +161,18 @@ L.push(
   ['t-gh','w-site'],['t-cf','w-site'],['s-ux','w-site'],['s-ai','w-site'],['s-proto','w-site'],
   ['t-ghl','w-coqui'],['t-wa','w-coqui'],['s-brand','w-coqui'],['s-crm','w-coqui'],['s-sys','w-coqui']
 );
+
+/* Full recommendation letters, shown in the map panel when a person is clicked.
+   Contact details are left out on purpose. */
+const LETTERS = {
+  'p-dev': [
+    'To Whom It May Concern,',
+    'I am writing to enthusiastically recommend Indigo Grady for product and operations roles. I had the pleasure of working closely with Indigo as a colleague at Razor Sparrow LLC, where we collaborated on product development, backlog management, and technical delivery.',
+    'One of Indigo\u2019s standout contributions was transforming the founders\u2019 high-level ideas and the growing support backlog into well-scoped, prioritized tickets in Taiga. Indigo excelled at breaking down complex or loosely defined requests into clear user stories with acceptance criteria, effort estimates, and priority rankings. This process brought much-needed structure to the team\u2019s work and ensured that the highest-impact items moved forward first.',
+    'We also worked closely together on the design of several new systems. We designed and built an entirely new admin portal used by both customers and Razor Sparrow employees, supporting varying degrees of authorization. We also designed a new authorization system, including a totally new database schema to support it. Indigo approached these technical discussions thoughtfully, balancing the need for a clean, scalable data model with practical delivery constraints. His collaborative style made it easy to reason through trade-offs, challenge assumptions constructively, and land on solutions that served both immediate needs and longer-term maintainability.',
+    'Beyond scoping and design work, Indigo was totally willing to dive as deep as necessary to help figure out and resolve software bugs. He showed real persistence and technical curiosity when tracking down difficult issues, never shying away from complex root-cause analysis or messy edge cases.',
+    'Together we formed an effective working relationship that consistently moved the product forward. Indigo combines product thinking, operational rigor, and strong interpersonal skills. I am confident he would be a valuable addition to any product or operations team and would recommend him without reservation.',
+    'Sincerely,\nAndrew Randall\nLead Software Developer'
+  ]
+};
+N.forEach((n) => { if (LETTERS[n.id]) n.letter = LETTERS[n.id]; });

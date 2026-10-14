@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
 import { ANSWERS, SUGGEST } from '../data/answers.js';
+import { match, norm } from '../data/match.js';
 import { TYPES, N, L } from '../data/map.js';
 /* =========================================================
    DATA: one source of truth for the page, the map, and Ask
@@ -190,6 +191,7 @@ function showPanel(n) {
   if (n.sub && !/^(Tool|Platform|Skill)$/.test(n.sub)) h += '<span class="sub">' + esc(n.sub) + '</span>';
   if (n.quote) h += '<q>' + esc(n.quote) + '</q>';
   if (n.body) h += '<p>' + esc(n.body) + '</p>';
+  if (n.letter) h += '<div class="letter"><h4>FULL RECOMMENDATION</h4>' + n.letter.map(function (p) { return '<p>' + esc(p).replace(/\n/g, '<br>') + '</p>'; }).join('') + '</div>';
   if (n.result) h += '<p class="result">' + esc(n.result) + '</p>';
   if (n.url) h += '<p><a class="ext" href="' + esc(n.url) + '" target="_blank" rel="noopener">' + esc(n.urlLabel || 'Visit') + ' ↗</a></p>';
   if (n.todo) h += '<p class="todo">To map: ' + esc(n.todo) + '</p>';
@@ -240,24 +242,16 @@ document.querySelectorAll('.roles li').forEach(function (li, i) {
 
 /* =========================================================
    ASK: instant answers from Indigo's written answer library (src/data/answers.js).
-   No model writes text. `also` phrases (weight 4) beat the broader single-word keys.
+   No model writes text. The matcher (src/data/match.js) compares the question with
+   each answer's question, keys and extra phrasings (src/data/phrasings.js).
    ========================================================= */
-var INTENTS = ANSWERS.map(function (a) {
-  return Object.assign({}, a, { keys: (a.keys || []).concat((a.also || []).map(function (p) { return [p, 4]; })) });
-});
-
-function norm(s) { return ' ' + s.toLowerCase().replace(/[^a-z0-9\- ]+/g, ' ').replace(/\s+/g, ' ') + ' '; }
+var INTENTS = ANSWERS;
 function answer(qText) {
-  var t0 = performance.now(), q = norm(qText), best = null, bestScore = 0;
-  INTENTS.forEach(function (it) {
-    var s = 0; it.keys.forEach(function (k) { var key = k[0].trim().length <= 3 ? ' ' + k[0].trim() + ' ' : k[0]; if (q.indexOf(key) !== -1) s += k[1]; });
-    if (s > bestScore) { bestScore = s; best = it; }
-  });
-  var out = { ms: 0 };
-  if (best && bestScore >= 2) { out.intent = best; }
+  var t0 = performance.now(), m = match(qText), out = { ms: 0, alts: m.alts };
+  if (m.index != null) { out.intent = INTENTS[m.index]; }
   else {
     var STOP = ' what about tell have does with your that this from they there their when where which would could should know experience ';
-    var words = q.split(' ').filter(function (w) { return w.length >= 4 && STOP.indexOf(' ' + w + ' ') === -1; });
+    var words = norm(qText).split(' ').filter(function (w) { return w.length >= 4 && STOP.indexOf(' ' + w + ' ') === -1; });
     var hits = N.filter(function (n) { var hay = (n.name + ' ' + (n.body || '') + ' ' + (n.result || '') + ' ' + (n.sub || '')).toLowerCase(); return words.some(function (w) { return hay.indexOf(w) !== -1; }); });
     out.related = hits.slice(0, 6);
   }
@@ -269,7 +263,8 @@ function answer(qText) {
    matching dots brighten as you type, and an answer traces a path to its sources.
    Answers are only Indigo's written text. Optional remote matcher: set data-endpoint
    on #ask; it receives POST {"q": "..."} and returns {"index": n} (an INTENTS index)
-   or {"index": null}. Without it, unmatched questions go straight to the fallback.
+   or {"index": null, "alts": [n, ...]} with up to two near misses. Near misses show
+   as "Did you mean". Without it, unmatched questions use the in-browser near misses.
    --------------------------------------------------------- */
 var askSec = document.getElementById('ask'), ansBox = document.getElementById('answer'), input = document.getElementById('askInput'),
     live = document.getElementById('askLive'), ENDPOINT = askSec.getAttribute('data-endpoint') || '';
@@ -303,10 +298,20 @@ function showAnswer(qText, it, how) {
   finish(h); askTrace(it.nodes.filter(function (id) { return id !== 'me'; }), 'Answer sources');
   live.textContent = 'Its sources are lit on the map.';
 }
-function showFallback(qText, related) {
-  var h = '<span class="q">' + esc(qText) + '</span><p>I haven’t written about that yet. Try one of these, or <a href="https://www.linkedin.com/in/indigogrady">ask me on LinkedIn</a>.</p>' + suggestHtml(SUGGEST.slice(0, 3));
+function showMaybe(qText, alts, related) {
+  var h = '<span class="q">' + esc(qText) + '</span><p>I’m not sure which you mean. Did you mean one of these?</p>' + suggestHtml(alts);
   if (related && related.length) h += '<div class="ev"><span>CLOSEST PARTS OF MY WORK</span>' + related.map(chipBtn).join('') + '</div>';
-  finish(h); askTrace((related || []).map(function (n) { return n.id; }), related && related.length ? 'Closest parts of my work' : 'No written answer yet');
+  finish(h); askTrace(INTENTS[alts[0]].nodes.filter(function (id) { return id !== 'me'; }), 'Closest written answers');
+  live.textContent = 'Pick the question you meant.';
+}
+function showNone(qText, r, alts) {
+  alts = (alts && alts.length ? alts : r.alts || []).filter(function (i) { return INTENTS[i]; });
+  if (alts.length) showMaybe(qText, alts, r.related); else showFallback(qText, r.related);
+}
+function showFallback(qText, related) {
+  var h = '<span class="q">' + esc(qText) + '</span><p>That’s a great one to ask me directly.</p><div class="row"><a class="btn primary" href="https://www.linkedin.com/in/indigogrady" target="_blank" rel="noopener">Ask me on LinkedIn ↗</a></div><p class="fine">Or try one of these:</p>' + suggestHtml(SUGGEST.slice(0, 3));
+  if (related && related.length) h += '<div class="ev"><span>CLOSEST PARTS OF MY WORK</span>' + related.map(chipBtn).join('') + '</div>';
+  finish(h); askTrace((related || []).map(function (n) { return n.id; }), related && related.length ? 'Closest parts of my work' : 'Ask me on LinkedIn');
   live.textContent = '';
 }
 function finish(h) {
@@ -318,7 +323,7 @@ function render(qText) {
   qText = qText.trim(); if (!qText) { ansBox.hidden = true; return; }
   var seq = ++askSeq, r = answer(qText);
   if (r.intent) return showAnswer(qText, r.intent, 'instant');
-  if (!ENDPOINT || !window.fetch) return showFallback(qText, r.related);
+  if (!ENDPOINT || !window.fetch) return showNone(qText, r);
   askSec.classList.add('matching'); glowTo([], 'Matching…'); askPulse(true);
   ansBox.hidden = false; ansBox.innerHTML = '<span class="q">' + esc(qText) + '</span><span class="speed matching">Matching your question to my written answers</span>';
   live.textContent = 'Matching your question…';
@@ -326,7 +331,7 @@ function render(qText) {
   fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: qText }), signal: ctl ? ctl.signal : undefined })
     .then(function (res) { return res.ok ? res.json() : null; })
     .catch(function () { return null; })
-    .then(function (j) { clearTimeout(to); if (seq !== askSeq) return; var it = j && typeof j.index === 'number' ? INTENTS[j.index] : null; if (it) showAnswer(qText, it, 'matched'); else showFallback(qText, r.related); });
+    .then(function (j) { clearTimeout(to); if (seq !== askSeq) return; var it = j && typeof j.index === 'number' ? INTENTS[j.index] : null; if (it) showAnswer(qText, it, 'matched'); else showNone(qText, r, j && j.alts); });
 }
 document.getElementById('askForm').addEventListener('submit', function (e) { e.preventDefault(); render(input.value); });
 var deb; input.addEventListener('input', function () {

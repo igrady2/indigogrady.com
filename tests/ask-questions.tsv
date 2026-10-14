@@ -1,0 +1,184 @@
+how many years did you spend at optic power	t-optic
+when did u start at code power and when did you leave	t-optic
+code power dates?	t-optic
+what is optic power exactly	t-optic-what
+is code power an agency	t-optic-what
+were you a project manager or a coordinator at code power	t-title
+your title at code power seems junior, what did you actually do	t-title|prog
+how long at razor sparrow	t-rs
+razor sparrow start date	t-rs
+walk me through your razor sparrow job	t-rs-what|f-rs
+what does razor sparrow do	t-rs-what|r-gt
+what does a GM do at a tiny saas company	t-gm
+gm title at a software startup, explain	t-gm
+what do you mean by treating internal processes like products	t-mindset
+product mindset	t-mindset
+which parts were yours and which were the founders	t-credit
+did you write the code yourself	t-credit|tech
+did gradetransferer ever get rebuilt	t-rebuild
+was the main extension ever rewritten	t-rebuild
+what's your role at autopilotpr	t-ap
+tell me about your current job	t-ap
+are you working right now	t-ap|avail
+what's triumvirate	t-te
+environmental specialist job, what was that like	t-te
+did you work with hazardous waste	t-te|g-fleet
+what did you do as restaurant GM	t-bistro
+bistro 360?	t-bistro
+cheesetique	t-cheese
+were you a bartender	t-cheese|before
+how did a restaurant manager end up in software	t-path
+why product management	t-path
+how did you break into tech	t-path
+which client project did you like most	f-cp
+best project at code power	f-cp
+what are you most proud of at your last job	f-rs
+biggest accomplishment at razor sparrow	f-rs
+give me an example of root cause analysis	f-root
+tell me about debugging a messy problem	f-root
+toughest project	f-hard
+what was the most difficult thing you've done at work	f-hard
+tell me about a time you made a mistake	f-mistake
+have you ever caught an error before it shipped	f-mistake
+looking back what would you change	f-diff
+any regrets from razor sparrow	f-diff
+what is your biggest weakness	f-weak
+where do you need to grow	f-weak
+what job are you looking for	f-next
+what kind of role do you want next	f-next
+are you open to program manager roles	f-next
+can you handle a big corporate environment	f-larger
+have you worked anywhere with more than 100 people	f-larger
+startups only or would you join an enterprise	f-larger
+how do you do discovery	w-discovery
+how do you decide what to build	w-discovery|g-strategy
+how do you prioritize when everything is urgent	w-prioritize
+prioritization framework?	w-prioritize
+how do you write user stories	w-reqs
+what does a good ticket look like to you	w-reqs
+how do you stop scope creep	w-scope
+how do you prototype	w-prototype
+do you make wireframes or mockups	w-prototype|g-design
+when do you build something yourself vs ask engineering	w-build-vs-eng
+buy vs build	w-build-vs-eng
+how do you work with developers	w-eng
+how do you collaborate with engineering teams	w-eng
+how do you handle conflict with a stakeholder	w-disagree
+what happens when you disagree with your boss	w-disagree
+describe your management style	w-lead-style
+how would your team describe you as a leader	w-lead-style|pp-refs
+how did you evaluate the ai support bot	a-eval
+how do you test llm outputs	a-eval|a-guard
+how do you prevent hallucinations	a-guard
+how do you stop AI from inventing prices or dates	a-guard
+how do you make AI emails sound human	a-voice
+do you review code written by AI	a-code
+how do you verify code that claude writes	a-code
+what are you best at with AI	a-strength
+what have you launched	r-launch
+tell me about gradesight	r-launch
+what chrome extensions did you ship	r-launch
+what is gradetransferer	r-gt
+how many users does gradetransferer have	r-gt
+how did you build the support ticketing workflow	r-tickets
+how did you get first response time down	r-tickets|f-rs
+why organize accounts by district	r-accounts
+how did you handle schools with lots of contacts	r-accounts
+what did you learn from selling to school districts	r-purchasing
+how do school purchase orders work	r-purchasing
+classcloak privacy	r-privacy
+how do you think about student data privacy	r-privacy
+what internal tools have you built	r-tools
+did you build any scripts or utilities	r-tools
+how do you document processes	r-sops
+do you write SOPs	r-sops
+what is the gliders program	r-gliders
+ambassador program	r-gliders
+what was the admin portal project	r-portal
+did you design permissions	r-portal
+how did you change district pricing	r-pricing
+pricing strategy experience	r-pricing|g-strategy
+why did you leave your last job	r-leave
+were you laid off	r-leave
+why are you looking	r-leave|f-next
+list the projects you did at code power	p-cp-list
+what clients did you work with at code power	p-cp-list
+what was a normal day at code power	p-cp-day
+tell me about the task manager app	p-connect
+connect marketing	p-connect
+what is fam-biz	p-build
+build.org	p-build|p-dc
+what was the design challenge app	p-dc
+mente serena	p-mente
+did you work on a mental health app	p-mente
+mundolms	p-mundo
+learning management system project	p-mundo
+walkboard	p-walk
+what is friendbase	p-friend
+did you work on a game	p-friend
+what did clients think of you	p-trust
+have you owned a product end to end	g-own
+how do you build a roadmap	g-strategy
+what's your product strategy approach	g-strategy
+what metrics do you track	g-metrics
+how do you know if a launch worked	g-metrics
+kpis	g-metrics
+experience with approval workflows	g-multiparty
+have you built marketplace style products with multiple sides	g-multiparty
+do you know anything about fleet or logistics	g-fleet
+trucking experience	g-fleet
+how do you work with ux designers	g-design
+how can I reach you	l-contact
+what's your email	l-contact
+linkedin?	l-contact
+references	pp-refs
+what do former coworkers say about you	pp-refs
+do you have leadership experience	lead
+have you managed a team	lead
+how many people have you managed	lead
+how do you use ai in your work	ai
+are you good with chatgpt and claude	ai|tools
+product manager experience?	pm
+have you been a PM	pm
+what ops experience do you have	ops
+customer support operations	ops|r-tickets
+have you run agile projects	prog
+are you a scrum master	prog|t-title
+how do you manage stakeholders	stake
+how technical is indigo	tech
+can you code	tech
+do you know sql	tech
+can you work remote	remote
+where are you based	remote
+what timezone are you in	remote
+do you need visa sponsorship	remote
+have you worked in education technology	edtech
+k-12 experience	edtech
+are you data driven	data
+did you go to college	edu
+what is your degree	edu
+what software tools do you know	tools
+do you use jira	tools|prog
+what did you do before software	before
+when can you start	avail
+are you available for full time	avail
+what are your salary expectations	none
+how much do you want to be paid	none
+what are your hobbies	none
+do you have kids	none
+what's your favorite food	none
+what do you think about the election	none
+can you reverse a linked list	none
+what's the weather in puerto rico	none
+do you speak spanish	none
+tell me a joke	none
+what's your phone number	none
+what is your myers briggs type	none
+do you have a portfolio pdf	none
+do you play any sports	none
+what's 2+2	none
+who is your favorite author	none
+can I see your resume	none
+are you a us citizen	remote
+have you used salesforce	none
+do you know python	tech
