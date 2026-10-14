@@ -1,15 +1,16 @@
-/* Scores the Ask matcher against tests/ask-questions.tsv (question <tab> acceptable ids, | separated, or "none").
+/* Scores the Ask matcher (and the map facts in src/data/facts.js) against tests/ask-questions.tsv (question <tab> acceptable ids, | separated, or "none").
    Run: node scripts/eval-ask.mjs [--misses] */
 import fs from 'fs';
 import { ANSWERS } from '../src/data/answers.js';
 import { match } from '../src/data/match.js';
+import { fact } from '../src/data/facts.js';
 
 const rows = fs.readFileSync(new URL('../tests/ask-questions.tsv', import.meta.url), 'utf8').trim().split('\n').map((l) => { const [q, e] = l.split('\t'); return { q, expect: e.split('|') }; });
 const ids = new Set(ANSWERS.map((a) => a.id));
-rows.forEach((r) => r.expect.forEach((e) => { if (e !== 'none' && !ids.has(e)) throw new Error('unknown id ' + e); }));
+rows.forEach((r) => r.expect.forEach((e) => { if (e !== 'none' && !e.startsWith('fact:') && !ids.has(e)) throw new Error('unknown id ' + e); }));
 let right = 0, wrong = 0, miss = 0, noneOk = 0, noneBad = 0, dym = 0; const out = [];
 rows.forEach((r) => {
-  const m = match(r.q), got = m.index == null ? 'none' : ANSWERS[m.index].id, alts = (m.alts || []).map((i) => ANSWERS[i].id);
+  const m = match(r.q), f = fact(r.q, ANSWERS[m.index]), got = f ? f.id : m.index == null ? 'none' : ANSWERS[m.index].id, alts = (m.alts || []).map((i) => ANSWERS[i].id);
   if (r.expect[0] === 'none') { if (got === 'none') noneOk++; else { noneBad++; out.push(['FALSE', r.q, got]); } return; }
   if (r.expect.includes(got)) right++;
   else if (got === 'none') { miss++; if (alts.some((a) => r.expect.includes(a))) dym++; out.push(['MISS', r.q, r.expect.join('|'), alts.join(',')]); }

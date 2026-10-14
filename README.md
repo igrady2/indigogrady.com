@@ -23,6 +23,7 @@ npm run build    # static site in dist/ (needs Node 22.12 or newer)
 
 ## How Ask works
 
+1. Yes/no tool questions ("Have you used Stripe?") and date questions ("When were you at Triumvirate?") are answered from the map itself by `src/data/facts.js`: where each tool shows up, and each role's title and dates. Add a tool's other names to `TOOL_WORDS` there when you add a tool dot. A written answer about dates still wins over the generated one.
 1. In the browser, `src/data/match.js` compares the question with each answer's question, keywords and extra phrasings (`src/data/phrasings.js`, about 850 ways people ask the same things). A clear winner is answered instantly.
 2. Anything else is posted to `/api/ask`. That function sends the question and the list of answers to [Jev](https://docs.typesafe.ai) (TypeSafe's System One model). Jev returns which answer fits, or "none". It never writes text, so the page only ever shows Indigo's own words.
 3. If Jev isn't confident (top probability below 0.5), the box offers up to two near misses as "Did you mean". With no near miss, it invites the visitor to ask Indigo on LinkedIn and suggests questions.

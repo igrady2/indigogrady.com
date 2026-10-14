@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import { ANSWERS, SUGGEST } from '../data/answers.js';
 import { match, norm } from '../data/match.js';
+import { fact } from '../data/facts.js';
 import { TYPES, N, L } from '../data/map.js';
 /* =========================================================
    DATA: one source of truth for the page, the map, and Ask
@@ -247,8 +248,9 @@ document.querySelectorAll('.roles li').forEach(function (li, i) {
    ========================================================= */
 var INTENTS = ANSWERS;
 function answer(qText) {
-  var t0 = performance.now(), m = match(qText), out = { ms: 0, alts: m.alts };
-  if (m.index != null) { out.intent = INTENTS[m.index]; }
+  var t0 = performance.now(), m = match(qText), out = { ms: 0, alts: m.alts }, f = fact(qText, INTENTS[m.index]);
+  if (f) { out.intent = f; }
+  else if (m.index != null) { out.intent = INTENTS[m.index]; }
   else {
     var STOP = ' what about tell have does with your that this from they there their when where which would could should know experience ';
     var words = norm(qText).split(' ').filter(function (w) { return w.length >= 4 && STOP.indexOf(' ' + w + ' ') === -1; });
@@ -294,7 +296,7 @@ function showAnswer(qText, it, how) {
   var h = (same ? '' : '<span class="q">You asked: ' + esc(qText) + '</span>') + '<h3>' + esc(it.q) + '</h3><p>' + esc(it.a) + '</p>';
   if (it.quote) { var p = byId[it.quote]; h += '<q>' + esc(p.quote) + ' — ' + esc(p.name) + '</q>'; }
   h += '<div class="ev"><span>SOURCES · OPEN ON MAP</span>' + it.nodes.filter(function (id) { return id !== 'me'; }).map(function (id) { return chipBtn(byId[id]); }).join('') + '</div>';
-  h += '<span class="speed">' + (how === 'instant' ? 'Instant' : 'Matched') + ' · my written answer</span>';
+  h += '<span class="speed">' + (how === 'instant' ? 'Instant' : 'Matched') + (it.fact ? ' · from my map' : ' · my written answer') + '</span>';
   finish(h); askTrace(it.nodes.filter(function (id) { return id !== 'me'; }), 'Answer sources');
   live.textContent = 'Its sources are lit on the map.';
 }
