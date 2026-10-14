@@ -47,7 +47,6 @@ function start() {
     p.sw = (0.32 + 0.38 * (1 - p.sr)) * (0.8 + Math.random() * 0.4);
     p.lx = Math.cos(p.sa) * p.sr; p.ly = Math.sin(p.sa) * p.sr;
   });
-  var STARS = []; for (var i = 0; i < (small ? 70 : 160); i++) STARS.push({ x: Math.random(), y: Math.random(), z: 0.2 + Math.random() * 0.8 });
 
   function gauss() { var u = 1 - Math.random(), v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
   function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
@@ -77,13 +76,13 @@ function start() {
   /* ---------- phases ---------- */
   var phase = root.classList.contains('intro') && !reduce ? 'swarm' : 'live';
   var t0 = performance.now(), phaseStart = t0, last = t0;
-  var swarmC = { x: 0, y: 0 }, swarmR = 0, vel = { x: 0, y: 0 };
-  var formFrom = null, zoomC = null;
+  var swarmC = { x: 0, y: 0 }, swarmR = 0;
+  var glideFrom = null, groups = null;
   if (phase === 'live') root.classList.remove('intro');
 
   function go() {
     if (phase !== 'swarm') return;
-    phase = 'fly'; phaseStart = performance.now();
+    phase = 'glide'; phaseStart = performance.now(); glideFrom = { x: swarmC.x, y: swarmC.y };
     root.classList.add('intro-go');
   }
   function skip() {
@@ -94,7 +93,7 @@ function start() {
   if (intro) {
     intro.addEventListener('click', function (e) { if (e.target.closest('[data-skip]')) { e.stopPropagation(); skip(); } else go(); });
     document.addEventListener('keydown', function (e) {
-      if (phase !== 'swarm' && phase !== 'fly') return;
+      if (phase === 'live' || phase === 'form') return;
       if (e.key === 'Escape') skip(); else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
     });
     var enter = intro.querySelector('[data-enter]'); if (enter && phase === 'swarm') setTimeout(function () { try { enter.focus({ preventScroll: true }); } catch (e) {} }, 50);
@@ -115,57 +114,112 @@ function start() {
     return { x: swarmC.x + X, y: swarmC.y + Y };
   }
 
+  var TYPES = ['me', 'role', 'work', 'person', 'skill'];
+  var FORM = 2.3, GLIDE = 1.3, GROUP_MOVE = 1.3, GROUP_HOLD = 1.5;
+  var LABELS = { me: ['Indigo', 'the center'], role: ['Roles', 'role'], work: ['Projects', 'project'], person: ['People', 'person'], skill: ['Skills and tools', 'skill'] };
+  var NCOUNT = {}; nodes.forEach(function (n) { NCOUNT[n.type] = (NCOUNT[n.type] || 0) + 1; });
+  var PCOUNT = {}; P.forEach(function (p) { PCOUNT[p.type] = (PCOUNT[p.type] || 0) + 1; });
+  var FONT = (getComputedStyle(root).getPropertyValue('--f-display') || '').trim() || 'system-ui, sans-serif';
+  function tail(path, p, q, T, M) {
+    var dx = (q.x - p.x) * T, dy = (q.y - p.y) * T, len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 0.01) return;
+    if (len > M) { dx *= M / len; dy *= M / len; }
+    path.moveTo(q.x - dx, q.y - dy); path.lineTo(q.x, q.y);
+  }
+  function startGroup() {
+    /* Indigo on top, the four kinds of dots in a row (2 x 2 on phones), labels on one line per row */
+    var row = small ? [[0.29, 0.4], [0.71, 0.4], [0.29, 0.68], [0.71, 0.68]] : [[0.2, 0.52], [0.4, 0.52], [0.6, 0.52], [0.8, 0.52]];
+    var base = Math.min(W, H) * (small ? 0.0075 : 0.0042), cap = small ? W * 0.135 : Math.min(W * 0.072, H * 0.13);
+    function rad(t, f) { return Math.min(cap * f, base * Math.sqrt(PCOUNT[t] || 1) * f); }
+    groups = { me: { x: W / 2, y: H * (small ? 0.15 : 0.22), r: rad('me', 0.6) } };
+    groups.me.ly = groups.me.y + groups.me.r + (small ? 10 : 14);
+    ['role', 'work', 'person', 'skill'].forEach(function (t, k) {
+      groups[t] = { x: W * row[k][0], y: H * row[k][1], r: rad(t, 1) };
+      groups[t].ly = H * row[k][1] + cap + (small ? 10 : 18);
+    });
+    P.forEach(function (p) { p.sx = p.x; p.sy = p.y; p.ga = Math.random() * Math.PI * 2; p.gr = Math.min(1, Math.abs(gauss()) * 0.45); });
+  }
+  function drawLabels(a) {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    TYPES.forEach(function (t) {
+      var g = groups[t], L = LABELS[t], n = NCOUNT[t] || 0, y = g.ly;
+      ctx.fillStyle = 'rgba(255,255,255,' + a + ')';
+      ctx.font = '600 ' + (small ? 15 : 18) + 'px ' + FONT; ctx.fillText(L[0], g.x, y);
+      var c = COLORS[t];
+      ctx.fillStyle = 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (a * 0.9) + ')';
+      ctx.font = '500 ' + (small ? 12 : 13) + 'px ' + FONT;
+      ctx.fillText(t === 'me' ? 'where every line starts' : n + ' on the map', g.x, y + (small ? 20 : 25));
+    });
+    ctx.globalCompositeOperation = 'lighter';
+  }
+
   function frame(now) {
     var dt = Math.min(0.05, (now - last) / 1000); last = now;
     var time = (now - t0) / 1000, pt = (now - phaseStart) / 1000;
     fit();
-    if (phase === 'live' && root.classList.contains('intro')) root.classList.remove('intro');
 
-    if (phase === 'swarm' || phase === 'fly') {
+    if (phase === 'swarm' || phase === 'glide' || phase === 'group') {
       swarmR = small ? Math.min(W * 0.29, H * 0.36) : Math.min(W, H) * 0.3;
-      var stretch = 0, dir = { x: 1, y: 0 };
+      var spin = 0, mix = 0, gT = 0, labelA = 0;
       if (phase === 'swarm') { swarmC.x = W / 2; swarmC.y = H * 0.38; }
-      else {
-        /* the camera chases the ball as it zips around, then lets it settle */
-        var u = Math.min(1, pt / 2.1), amp = Math.sin(u * Math.PI);
-        var nx = W / 2 + Math.sin(u * 9.5) * W * 0.2 * amp, ny = H * 0.38 + Math.sin(u * 6.3 + 1) * H * 0.14 * amp;
-        vel.x = (nx - swarmC.x) / Math.max(dt, 0.001); vel.y = (ny - swarmC.y) / Math.max(dt, 0.001);
-        swarmC.x = nx; swarmC.y = ny;
-        var sp = Math.sqrt(vel.x * vel.x + vel.y * vel.y); stretch = clamp(sp / 2600, 0, 0.9); if (sp > 1) dir = { x: vel.x / sp, y: vel.y / sp };
-        if (u >= 1) { phase = 'form'; phaseStart = now; startForm(time); }
+      else if (phase === 'glide') {
+        /* one smooth glide to center while the swarm spins up and takes on its colors */
+        var u = Math.min(1, pt / GLIDE), eu = ease(u);
+        swarmC.x = glideFrom.x + (W / 2 - glideFrom.x) * eu; swarmC.y = glideFrom.y + (H * 0.45 - glideFrom.y) * eu;
+        swarmR *= 1 + 0.12 * Math.sin(u * Math.PI);
+        spin = Math.sin(u * Math.PI) * 1.6; mix = eu;
+        if (u >= 1) { phase = 'group'; phaseStart = now; startGroup(); }
+      } else {
+        /* sort by type: each color gathers into its own labeled cluster */
+        mix = 1; gT = Math.min(1, pt / GROUP_MOVE);
+        labelA = clamp((pt - GROUP_MOVE * 0.55) / 0.5, 0, 1);
+        if (pt >= GROUP_MOVE + GROUP_HOLD) { phase = 'form'; phaseStart = now; startForm(); }
       }
-      /* clear every frame: streaks are drawn as tails, so nothing lingers on the background */
       ctx.globalCompositeOperation = 'source-over';
       ctx.clearRect(0, 0, W, H);
-      /* streaming stars give the chase its speed */
       ctx.globalCompositeOperation = 'lighter';
-      ctx.fillStyle = 'rgba(160,175,255,0.5)';
-      STARS.forEach(function (s) {
-        s.x = (s.x - vel.x * dt * s.z * 0.00035 + 1) % 1; s.y = (s.y - vel.y * dt * s.z * 0.00035 + 1) % 1;
-        if (phase !== 'fly') return; ctx.fillRect(s.x * W, s.y * H, 1.2 * s.z, 1.2 * s.z);
-      });
       ctx.lineWidth = 1;
-      var TAIL = phase === 'fly' ? 5 : 7, MAXT = phase === 'fly' ? 150 : 34;
-      var paths = [new Path2D(), new Path2D(), new Path2D()];
-      P.forEach(function (p, i) {
-        flow(p, dt, time, stretch);
-        var q = swarmXY(p, stretch, dir);
-        if (p.x || p.y) {
-          var dx = (q.x - p.x) * TAIL, dy = (q.y - p.y) * TAIL, len = Math.sqrt(dx * dx + dy * dy);
-          if (len > MAXT) { dx *= MAXT / len; dy *= MAXT / len; }
-          var path = paths[i % 3]; path.moveTo(q.x - dx, q.y - dy); path.lineTo(q.x, q.y);
-        }
-        p.x = q.x; p.y = q.y;
-      });
-      ctx.strokeStyle = 'rgba(235,242,255,0.55)'; ctx.stroke(paths[0]);
-      ctx.strokeStyle = 'rgba(140,230,215,0.45)'; ctx.stroke(paths[1]);
-      ctx.strokeStyle = 'rgba(160,165,255,0.45)'; ctx.stroke(paths[2]);
-      if (phase === 'swarm') { vel.x *= 0.9; vel.y *= 0.9; }
+      var TAIL = phase === 'swarm' ? 7 : phase === 'glide' ? 5 : 2, MAXT = phase === 'swarm' ? 34 : phase === 'glide' ? 40 : 18;
+      if (phase === 'swarm') {
+        var paths = [new Path2D(), new Path2D(), new Path2D()];
+        P.forEach(function (p, i) {
+          flow(p, dt, time, 0);
+          var q = swarmXY(p, 0, null);
+          if (p.x || p.y) tail(paths[i % 3], p, q, TAIL, MAXT);
+          p.x = q.x; p.y = q.y;
+        });
+        ctx.strokeStyle = 'rgba(235,242,255,0.55)'; ctx.stroke(paths[0]);
+        ctx.strokeStyle = 'rgba(140,230,215,0.45)'; ctx.stroke(paths[1]);
+        ctx.strokeStyle = 'rgba(160,165,255,0.45)'; ctx.stroke(paths[2]);
+      } else {
+        var tp = {}, dots = {};
+        TYPES.forEach(function (t) { tp[t] = new Path2D(); dots[t] = new Path2D(); });
+        P.forEach(function (p) {
+          var q;
+          if (phase === 'glide') { flow(p, dt, time, spin); q = swarmXY(p, 0, null); }
+          else {
+            var g = groups[p.type], e = ease(clamp((gT - p.d * 0.2) / 0.8, 0, 1));
+            var a = p.ga + time * 0.18, tx = g.x + Math.cos(a) * p.gr * g.r, ty = g.y + Math.sin(a) * p.gr * g.r;
+            q = { x: p.sx + (tx - p.sx) * e, y: p.sy + (ty - p.sy) * e };
+          }
+          tail(tp[p.type], p, q, TAIL, MAXT);
+          if (phase === 'group') dots[p.type].rect(q.x - p.s / 2, q.y - p.s / 2, p.s, p.s);
+          p.x = q.x; p.y = q.y;
+        });
+        TYPES.forEach(function (t) {
+          var c = COLORS[t], w = [235, 242, 255], m = t === 'me' ? 0 : mix;
+          var col = Math.round(w[0] + (c[0] - w[0]) * m) + ',' + Math.round(w[1] + (c[1] - w[1]) * m) + ',' + Math.round(w[2] + (c[2] - w[2]) * m);
+          ctx.strokeStyle = 'rgba(' + col + ',' + (phase === 'group' ? 0.35 : 0.55) + ')'; ctx.stroke(tp[t]);
+          ctx.fillStyle = 'rgba(' + col + ',0.9)'; ctx.fill(dots[t]);
+        });
+        if (labelA > 0) drawLabels(labelA);
+      }
     } else {
       project();
       var lit = MAP.lit(), glow = {}, any = false;
       (lit.glow || []).concat(lit.pre || []).forEach(function (id) { glow[id] = 1; any = true; });
-      var formT = phase === 'form' ? Math.min(1, pt / 1.9) : 1;
+      var formT = phase === 'form' ? Math.min(1, pt / FORM) : 1;
       ctx.globalCompositeOperation = 'source-over';
       ctx.clearRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'lighter';
@@ -181,34 +235,31 @@ function start() {
         ctx.fillStyle = g; ctx.fillRect(h.x - R, h.y - R, R * 2, R * 2);
       });
 
-      var zs = 1, zc = zoomC;
-      if (phase === 'form') zs = 1 + 2.2 * (1 - ease(formT));
+      
       for (var j = 0; j < P.length; j++) {
         var p = P[j], tg = dustTarget(p, time); if (!tg) continue;
         var h2 = nodeXY[p.n]; if (!h2.vis) continue;
         var x = tg.x, y = tg.y, e = 1;
         if (phase === 'form') {
-          /* zoom out from inside the cloud while each particle flies from the swarm to its dot */
-          x = zc.x + (x - zc.x) * zs; y = zc.y + (y - zc.y) * zs;
+          /* each particle flies from its group to its dot on the map */
           e = ease(clamp((formT - p.d * 0.35) / 0.65, 0, 1));
           x = p.fx + (x - p.fx) * e; y = p.fy + (y - p.fy) * e;
         }
         var on2 = glow[nodes[p.n].id], tw = 0.75 + 0.25 * Math.sin(time * 1.7 + p.tw);
         var al2 = (on2 ? 0.95 : any ? 0.16 : 0.5) * tw;
-        var c2 = e < 0.55 ? COLORS.me : COLORS[p.type];
+        if (phase === 'form') al2 = 0.9 + (al2 - 0.9) * e;
+        var c2 = COLORS[p.type];
         ctx.fillStyle = 'rgba(' + c2[0] + ',' + c2[1] + ',' + c2[2] + ',' + al2 + ')';
         var s = p.s * (on2 ? 1.25 : 1);
         ctx.fillRect(x - s / 2, y - s / 2, s, s);
       }
-      if (phase === 'form' && formT >= 1) { phase = 'live'; skip(); }
+      if (phase === 'form' && groups) { var la = clamp(1 - formT * 3, 0, 1); if (la > 0) drawLabels(la); }
+      if (phase === 'form' && formT >= 1) { phase = 'live'; setTimeout(skip, 700); }
     }
     raf = requestAnimationFrame(frame);
   }
-  function startForm(time) {
+  function startForm() {
     project();
-    var xs = 0, ys = 0, c = 0;
-    nodeXY.forEach(function (h) { if (h) { xs += h.x; ys += h.y; c++; } });
-    zoomC = { x: xs / c, y: ys / c };
     P.forEach(function (p) { p.fx = p.x; p.fy = p.y; });
     root.classList.add('intro-out');
   }
