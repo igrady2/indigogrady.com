@@ -62,7 +62,7 @@ export function simScores(qText) {
 }
 
 /* ---------- decision ---------- */
-export const SURE = 0.6;   // confident enough to answer outright
+export const SURE = 0.7;   // confident enough to answer outright
 export const MAYBE = 0.3;  // close enough to offer as "Did you mean"
 export const COVER = 0.5;  // share of the question's weight the answer must cover to be sure
 /* Returns { index, alts, ranked }: index is the confident pick or null;
