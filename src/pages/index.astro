@@ -3,6 +3,15 @@ import Base from '../layouts/Base.astro';
 ---
 <Base>
 
+<canvas id="dust" aria-hidden="true"></canvas>
+<div class="intro" id="intro" role="dialog" aria-label="Welcome">
+  <div class="intro-copy">
+    <p class="intro-name">Indigo Grady</p>
+    <p class="intro-line">Product and operations leader.</p>
+    <button type="button" class="intro-enter" data-enter>Enter</button>
+  </div>
+  <button type="button" class="intro-skip" data-skip>Skip intro</button>
+</div>
 <div class="dock" aria-hidden="true"><span class="now">SHOWING · <b id="mapNow">Everything</b></span><span class="legend"><span><i style="background:#8f95ff"></i>Roles</span><span><i style="background:#5be0c4"></i>Projects</span><span><i style="background:#f5b96b"></i>People</span><span><i style="background:#c79bff"></i>Skills</span></span></div>
 <svg id="sky" aria-hidden="true"></svg>
 
@@ -45,13 +54,6 @@ import Base from '../layouts/Base.astro';
         <button class="btn ghost" type="button" id="cta-explore">Explore the map</button>
       </div>
     </section>
-
-    <div class="ledger" aria-label="Results at Razor Sparrow" data-nodes="w-gt w-stab w-launch w-accounts" data-label="Razor Sparrow results">
-      <div><b>70,000</b><span>Chrome extension users, 4.8-star rating</span></div>
-      <div><b>&lt;24 hrs</b><span>first response time, down from weeks</span></div>
-      <div><b>3</b><span>new products launched</span></div>
-      <div><b>~300</b><span>school district accounts kept accurate</span></div>
-    </div>
 
     <section id="ask" class="ask" data-nodes="" data-label="Ask" data-endpoint="/api/ask">
       <span class="eyebrow">Ask about my experience</span>
@@ -172,4 +174,5 @@ import Base from '../layouts/Base.astro';
 </main>
 
 <script src="../scripts/site.js"></script>
+<script src="../scripts/particles.js"></script>
 </Base>

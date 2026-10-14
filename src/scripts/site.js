@@ -428,5 +428,15 @@ document.getElementById('suggest').innerHTML = suggestHtml(SUGGEST).replace(/^<d
 /* boot */
 showPanel(byId.me);
 buildSky();
+/* read-only view of the map for the particle layer (particles.js) */
+window.__siteMap = {
+  nodes: N,
+  pos: function (id) { return POS[id]; },
+  transform: function () { return hasD3 ? d3.zoomTransform(sky) : { x: 0, y: 0, k: 1 }; },
+  rect: function () { return sky.getBoundingClientRect(); },
+  lit: function () { return state.mode === 'read' ? { glow: state.glow || [], pre: state.pre || [] } : { glow: state.focus ? focusIds(state.focus) : [], pre: [] }; },
+  mode: function () { return state.mode; },
+  visible: function (id) { return visible(byId[id]); }
+};
 var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(buildSky, 200); });
 applyMode();
