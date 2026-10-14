@@ -171,7 +171,7 @@ export const ANSWERS = [
 
   /* ---------- Razor Sparrow work ---------- */
   { id: "r-launch", q: "What products did you launch?", also: ["gradesight","email my students","classcloak","chrome extensions","launches"],
-    a: "In August 2026, weeks before I left, we launched three new Chrome extensions for teachers. GradeSight adds grade highlighting and at-risk flags to gradebooks. Email My Students opens an Outlook email already addressed to the students a teacher selects. ClassCloak hides student names on screen so teachers can share screenshots safely. Email My Students reached about 1,000 users in its first two months. The founder brought the ideas, and I scoped them and kept each first version focused enough to ship.",
+    a: "In August 2026, weeks before I left, we launched three new Chrome extensions for teachers. GradeSight adds grade highlighting and at-risk flags to gradebooks. Email My Students opens an Outlook email already addressed to the students a teacher selects. ClassCloak hides student names on screen so teachers can share screenshots safely. Email My Students was a ground-up rebuild for Manifest V3, under the same listing. The founder brought the ideas, and I scoped them and kept each first version focused enough to ship.",
     nodes: ["w-launch","w-gs","w-ems","w-cc"] },
   { id: "r-gt", q: "What is GradeTransferer?", also: ["gradetransferer","grade transferer","flagship product","70,000 users"],
     a: "GradeTransferer is Razor Sparrow's flagship Chrome extension, with about 70,000 users and a 4.8-star rating on the Chrome Web Store. It was already established when I joined, and I ran the support, billing and product backlog around it.",
