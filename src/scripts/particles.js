@@ -41,7 +41,12 @@ function start() {
       });
     }
   });
-  P.forEach(function (p) { var a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()); p.lx = Math.cos(a) * r; p.ly = Math.sin(a) * r; });
+  /* swarm orbits: each particle keeps its own radius, so the ball stays evenly spread instead of collapsing into strands */
+  P.forEach(function (p) {
+    p.sr = 0.08 + Math.sqrt(Math.random()) * 0.9; p.sa = Math.random() * Math.PI * 2;
+    p.sw = (0.32 + 0.38 * (1 - p.sr)) * (0.8 + Math.random() * 0.4);
+    p.lx = Math.cos(p.sa) * p.sr; p.ly = Math.sin(p.sa) * p.sr;
+  });
   var STARS = []; for (var i = 0; i < (small ? 70 : 160); i++) STARS.push({ x: Math.random(), y: Math.random(), z: 0.2 + Math.random() * 0.8 });
 
   function gauss() { var u = 1 - Math.random(), v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
@@ -95,13 +100,12 @@ function start() {
     var enter = intro.querySelector('[data-enter]'); if (enter && phase === 'swarm') setTimeout(function () { try { enter.focus({ preventScroll: true }); } catch (e) {} }, 50);
   }
 
-  /* swarm flow: a tilted, churning ellipse of streaks */
+  /* swarm flow: a slow churning disc; small wobbles keep it alive without bunching */
   function flow(p, dt, time, stretch) {
-    var x = p.lx, y = p.ly, d = Math.sqrt(x * x + y * y);
-    var vx = -y * 1.1 + Math.sin(y * 3.1 + time * 0.9 + p.d * 2) * 0.55;
-    var vy = x * 0.55 + Math.cos(x * 2.7 - time * 0.7) * 0.55;
-    if (d > 0.95) { vx -= x * (d - 0.95) * 4; vy -= y * (d - 0.95) * 4; }
-    p.lx += vx * dt * 0.55 * (1 + stretch); p.ly += vy * dt * 0.55 * (1 + stretch);
+    p.sa += p.sw * dt * (1 + stretch * 1.5);
+    var r = p.sr * (1 + 0.06 * Math.sin(time * 0.8 + p.d * 12));
+    p.lx = Math.cos(p.sa) * r + 0.035 * Math.sin(time * 1.1 + p.sr * 9);
+    p.ly = Math.sin(p.sa) * r + 0.035 * Math.cos(time * 0.9 + p.d * 7);
   }
   var TILT = -0.38, cT = Math.cos(TILT), sT = Math.sin(TILT);
   function swarmXY(p, stretch, dir) {
@@ -120,19 +124,19 @@ function start() {
     if (phase === 'swarm' || phase === 'fly') {
       swarmR = small ? Math.min(W * 0.29, H * 0.36) : Math.min(W, H) * 0.3;
       var stretch = 0, dir = { x: 1, y: 0 };
-      if (phase === 'swarm') { swarmC.x = W / 2; swarmC.y = H * 0.42; }
+      if (phase === 'swarm') { swarmC.x = W / 2; swarmC.y = H * 0.38; }
       else {
         /* the camera chases the ball as it zips around, then lets it settle */
         var u = Math.min(1, pt / 2.1), amp = Math.sin(u * Math.PI);
-        var nx = W / 2 + Math.sin(u * 9.5) * W * 0.2 * amp, ny = H * 0.42 + Math.sin(u * 6.3 + 1) * H * 0.14 * amp;
+        var nx = W / 2 + Math.sin(u * 9.5) * W * 0.2 * amp, ny = H * 0.38 + Math.sin(u * 6.3 + 1) * H * 0.14 * amp;
         vel.x = (nx - swarmC.x) / Math.max(dt, 0.001); vel.y = (ny - swarmC.y) / Math.max(dt, 0.001);
         swarmC.x = nx; swarmC.y = ny;
         var sp = Math.sqrt(vel.x * vel.x + vel.y * vel.y); stretch = clamp(sp / 2600, 0, 0.9); if (sp > 1) dir = { x: vel.x / sp, y: vel.y / sp };
         if (u >= 1) { phase = 'form'; phaseStart = now; startForm(time); }
       }
+      /* clear every frame: streaks are drawn as tails, so nothing lingers on the background */
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = phase === 'fly' ? 'rgba(5,8,22,0.16)' : 'rgba(5,8,22,0.24)';
-      ctx.fillRect(0, 0, W, H);
+      ctx.clearRect(0, 0, W, H);
       /* streaming stars give the chase its speed */
       ctx.globalCompositeOperation = 'lighter';
       ctx.fillStyle = 'rgba(160,175,255,0.5)';
@@ -141,11 +145,16 @@ function start() {
         if (phase !== 'fly') return; ctx.fillRect(s.x * W, s.y * H, 1.2 * s.z, 1.2 * s.z);
       });
       ctx.lineWidth = 1;
+      var TAIL = phase === 'fly' ? 5 : 7, MAXT = phase === 'fly' ? 150 : 34;
       var paths = [new Path2D(), new Path2D(), new Path2D()];
       P.forEach(function (p, i) {
         flow(p, dt, time, stretch);
         var q = swarmXY(p, stretch, dir);
-        if (p.x || p.y) { var path = paths[i % 3]; path.moveTo(p.x, p.y); path.lineTo(q.x, q.y); }
+        if (p.x || p.y) {
+          var dx = (q.x - p.x) * TAIL, dy = (q.y - p.y) * TAIL, len = Math.sqrt(dx * dx + dy * dy);
+          if (len > MAXT) { dx *= MAXT / len; dy *= MAXT / len; }
+          var path = paths[i % 3]; path.moveTo(q.x - dx, q.y - dy); path.lineTo(q.x, q.y);
+        }
         p.x = q.x; p.y = q.y;
       });
       ctx.strokeStyle = 'rgba(235,242,255,0.55)'; ctx.stroke(paths[0]);
@@ -158,8 +167,7 @@ function start() {
       (lit.glow || []).concat(lit.pre || []).forEach(function (id) { glow[id] = 1; any = true; });
       var formT = phase === 'form' ? Math.min(1, pt / 1.9) : 1;
       ctx.globalCompositeOperation = 'source-over';
-      if (phase === 'form') { ctx.fillStyle = 'rgba(5,8,22,' + (0.25 + formT * 0.75) + ')'; ctx.fillRect(0, 0, W, H); }
-      else ctx.clearRect(0, 0, W, H);
+      ctx.clearRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'lighter';
 
       /* soft bloom behind lit dots and hubs */
