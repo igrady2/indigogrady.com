@@ -264,8 +264,8 @@ export const ANSWERS = [
     a: "The best way is LinkedIn, or the email link at the bottom of this page.",
     nodes: ["me"] },
   { id: "pp-refs", q: "What do people say about working with you?", also: ["references","recommendations","testimonials","what do others say"],
-    a: "Here's a sample. My engineering partner at Razor Sparrow said I \"excelled at breaking down complex or loosely defined requests into clear user stories.\" My engineering manager on BUILD put it in three words: \"Indigo owns it.\" You'll find more on the map under People.",
-    nodes: ["p-dev","p-chad","p-lauren","p-neil","p-rob"] },
+    a: "Here's a sample. Razor Sparrow's co-founder wrote that I bring \"good ideas to the table,\" am \"easy to work with,\" and care \"about getting the details right.\" My engineering partner there said I \"excelled at breaking down complex or loosely defined requests into clear user stories.\" My engineering manager on BUILD put it in three words: \"Indigo owns it.\" You'll find more on the map under People.",
+    nodes: ["p-david","p-dev","p-chad","p-lauren","p-neil","p-rob"] },
   { id: "w-risk", q: "How do you handle risk?", also: ["risk management","risk register","managing project risk","what could go wrong"],
     a: "I keep a risk register for each project, with a level and status for every risk, and I raise the uncomfortable ones early. When a client had no budget for QA, I flagged it as our top risk, agreed a plan with the client's president to make him the primary tester with every bug tracked in Jira, and we still shipped close to one release a week.",
     nodes: ["cp","t-jira","s-stake","s-req"] }
